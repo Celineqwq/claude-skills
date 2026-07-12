@@ -1,6 +1,6 @@
 # Claude Code Skills
 
-个人 Claude Code 技能集合。
+个人 Claude Code 技能集合。（由Claude Code辅助生成）
 
 ## 技能列表
 

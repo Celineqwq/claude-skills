@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>有机化学 - 词汇复习</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --card-bg: #1e293b;
+    --card-front: #1e293b;
+    --card-back: #1e293b;
+    --text: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --accent: #38bdf8;
+    --accent-dim: #0c4a6e;
+    --correct: #34d399;
+    --correct-dim: #064e3b;
+    --wrong: #f87171;
+    --wrong-dim: #450a0a;
+    --border: #334155;
+    --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+  }
+
+  /* ── Header ── */
+  .header {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  .header h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), #818cf8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .header .subtitle {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-top: 4px;
+  }
+
+  /* ── Stats bar ── */
+  .stats-bar {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+  .stat {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 20px;
+    text-align: center;
+    min-width: 80px;
+  }
+  .stat .val {
+    font-size: 1.4rem;
+    font-weight: 700;
+  }
+  .stat .lbl {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+  }
+  .stat.remain .val { color: var(--accent); }
+  .stat.mastered .val { color: var(--correct); }
+  .stat.review .val { color: #fbbf24; }
+
+  /* ── Card ── */
+  .card-container {
+    perspective: 1000px;
+    width: 100%;
+    max-width: 520px;
+    margin-bottom: 20px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .card {
+    position: relative;
+    width: 100%;
+    min-height: 240px;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-style: preserve-3d;
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+  }
+  .card.flipped { transform: rotateY(180deg); }
+
+  .card-face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 30px;
+    border: 1px solid var(--border);
+  }
+  .card-front { background: var(--card-bg); }
+  .card-back {
+    background: var(--card-bg);
+    transform: rotateY(180deg);
+  }
+
+  .card .term {
+    font-size: 1.8rem;
+    font-weight: 800;
+    text-align: center;
+    letter-spacing: 0.02em;
+    word-break: break-word;
+  }
+  .card .hint {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 12px;
+  }
+  .card .definition {
+    font-size: 1.15rem;
+    line-height: 1.7;
+    text-align: center;
+    color: #cbd5e1;
+  }
+  .card .lang-tag {
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  /* ── Card progress dots ── */
+  .card-index {
+    margin-bottom: 12px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+  }
+
+  /* ── Buttons ── */
+  .actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 24px;
+  }
+  .btn {
+    border: none;
+    border-radius: 12px;
+    padding: 14px 28px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .btn:active { transform: scale(0.96); }
+
+  .btn-forgot {
+    background: var(--wrong-dim);
+    color: var(--wrong);
+    border: 1px solid #7f1d1d;
+  }
+  .btn-forgot:hover { background: #7f1d1d; }
+
+  .btn-remember {
+    background: var(--correct-dim);
+    color: var(--correct);
+    border: 1px solid #065f46;
+  }
+  .btn-remember:hover { background: #065f46; }
+
+  .btn-flip {
+    background: var(--accent-dim);
+    color: var(--accent);
+    border: 1px solid #0e7490;
+  }
+  .btn-flip:hover { background: #0e7490; }
+
+  .btn-secondary {
+    background: var(--card-bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { background: var(--border); }
+
+  .btn-small {
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    border-radius: 8px;
+  }
+
+  /* ── Progress bar ── */
+  .progress-wrap {
+    width: 100%;
+    max-width: 520px;
+    background: var(--border);
+    border-radius: 10px;
+    height: 8px;
+    margin-bottom: 28px;
+    overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%;
+    border-radius: 10px;
+    background: linear-gradient(90deg, var(--accent), #818cf8);
+    transition: width 0.4s ease;
+  }
+
+  /* ── Toolbar ── */
+  .toolbar {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 10px;
+  }
+
+  /* ── Word list modal ── */
+  .word-list {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .word-list.open { display: flex; }
+  .word-list-inner {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 75vh;
+    overflow-y: auto;
+  }
+  .word-list-inner h3 { margin-bottom: 16px; }
+  .word-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.9rem;
+    gap: 16px;
+  }
+  .word-row .en { font-weight: 600; color: var(--accent); min-width: 0; }
+  .word-row .cn { color: var(--text-secondary); text-align: right; }
+
+  /* ── Section toggle ── */
+  .section-pills {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 16px;
+  }
+  .pill {
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-secondary);
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .pill.active { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
+
+  /* ── Responsive ── */
+  @media (max-width: 480px) {
+    .card { min-height: 200px; }
+    .card .term { font-size: 1.4rem; }
+    .card .definition { font-size: 1rem; }
+    .btn { padding: 12px 20px; font-size: 0.9rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🧪 有机化学 · 专业词汇复习</h1>
+  <p class="subtitle">点击卡片翻转 · 选择"记得"或"忘了"来追踪进度</p>
+</div>
+
+<!-- Section filter -->
+<div class="section-pills">
+  <button class="pill active" data-section="all">全部词汇</button>
+  <button class="pill" data-section="en-cn">英 → 中</button>
+</div>
+
+<!-- Stats -->
+<div class="stats-bar">
+  <div class="stat remain"><div class="val" id="stat-remain">0</div><div class="lbl">剩余</div></div>
+  <div class="stat mastered"><div class="val" id="stat-mastered">0</div><div class="lbl">已掌握</div></div>
+  <div class="stat review"><div class="val" id="stat-review">0</div><div class="lbl">待复习</div></div>
+</div>
+
+<!-- Progress bar -->
+<div class="progress-wrap">
+  <div class="progress-bar" id="progress-bar" style="width:0%"></div>
+</div>
+
+<!-- Card index -->
+<div class="card-index" id="card-index">第 1 个</div>
+
+<!-- Flashcard -->
+<div class="card-container" id="card-container" onclick="flipCard()">
+  <div class="card" id="card">
+    <div class="card-face card-front">
+      <span class="lang-tag" id="front-tag">English</span>
+      <div class="term" id="front-text">—</div>
+      <div class="hint">👆 点击翻转查看释义</div>
+    </div>
+    <div class="card-face card-back">
+      <span class="lang-tag" id="back-tag">中文</span>
+      <div class="definition" id="back-text">—</div>
+    </div>
+  </div>
+</div>
+
+<!-- Action buttons -->
+<div class="actions">
+  <button class="btn btn-forgot" onclick="markForgot()" id="btn-forgot">😕 忘了</button>
+  <button class="btn btn-flip" onclick="flipCard()">🔄 翻转</button>
+  <button class="btn btn-remember" onclick="markRemembered()" id="btn-remember">✅ 记得</button>
+</div>
+
+<!-- Toolbar -->
+<div class="toolbar">
+  <button class="btn btn-secondary btn-small" onclick="shuffleAll()">🔀 打乱重来</button>
+  <button class="btn btn-secondary btn-small" onclick="reviewForgotten()">📝 复习遗忘词</button>
+  <button class="btn btn-secondary btn-small" onclick="toggleWordList()">📋 词汇表</button>
+  <button class="btn btn-secondary btn-small" onclick="resetAll()">🔄 全部重置</button>
+</div>
+
+<!-- Word list modal -->
+<div class="word-list" id="word-list-modal" onclick="if(event.target===this) toggleWordList()">
+  <div class="word-list-inner" id="word-list-inner"></div>
+</div>
+
+<script>
+// ── DATA ──
+const ALL_WORDS = [
+  // ===== Section A: English → 中文 (有机化学专业词汇) =====
+
+  // ---- 基本概念 ----
+  { front: "organic chemistry", back: "有机化学", section: "en-cn" },
+  { front: "organic compounds", back: "有机化合物", section: "en-cn" },
+  { front: "functional group", back: "官能团", section: "en-cn" },
+  { front: "hydrocarbon", back: "烃", section: "en-cn" },
+  { front: "aromatic hydrocarbon", back: "芳香烃", section: "en-cn" },
+
+  // ---- 烃类 ----
+  { front: "alkane", back: "烷烃", section: "en-cn" },
+  { front: "alkene", back: "烯烃", section: "en-cn" },
+  { front: "alkyne", back: "炔烃", section: "en-cn" },
+  { front: "cycloalkane", back: "环烷烃", section: "en-cn" },
+  { front: "diene", back: "二烯", section: "en-cn" },
+
+  // ---- 有机化合物类别 ----
+  { front: "benzene", back: "苯", section: "en-cn" },
+  { front: "toluene", back: "甲苯", section: "en-cn" },
+  { front: "phenol", back: "酚", section: "en-cn" },
+  { front: "aniline", back: "苯胺", section: "en-cn" },
+  { front: "alcohol", back: "醇", section: "en-cn" },
+  { front: "ether", back: "醚", section: "en-cn" },
+  { front: "aldehyde", back: "醛", section: "en-cn" },
+  { front: "ketone", back: "酮", section: "en-cn" },
+  { front: "ester", back: "酯", section: "en-cn" },
+  { front: "amine", back: "胺", section: "en-cn" },
+  { front: "amide", back: "酰胺", section: "en-cn" },
+  { front: "thiol", back: "硫醇", section: "en-cn" },
+
+  // ---- 羧酸及衍生物 ----
+  { front: "carboxylic acid", back: "羧酸", section: "en-cn" },
+  { front: "substituted carboxylic acid", back: "取代羧酸", section: "en-cn" },
+  { front: "hydroxy acid", back: "羟基酸", section: "en-cn" },
+  { front: "acid anhydride", back: "酸酐", section: "en-cn" },
+  { front: "acyl halide", back: "酰卤", section: "en-cn" },
+  { front: "derivatives of carboxylic acid", back: "羧酸衍生物", section: "en-cn" },
+
+  // ---- 反应与概念 ----
+  { front: "acylation", back: "酰化", section: "en-cn" },
+  { front: "decarboxylation", back: "脱羧", section: "en-cn" },
+  { front: "hydrolysis", back: "水解", section: "en-cn" },
+  { front: "chirality", back: "手性", section: "en-cn" },
+  { front: "enantiomer", back: "对映体", section: "en-cn" },
+  { front: "heterocyclic compound", back: "杂环化合物", section: "en-cn" },
+  { front: "isoelectric point", back: "等电点", section: "en-cn" },
+
+  // ---- 天然产物与生物化学 ----
+  { front: "alkaloid", back: "生物碱", section: "en-cn" },
+  { front: "carbohydrate", back: "碳水化合物", section: "en-cn" },
+  { front: "saccharide", back: "糖类", section: "en-cn" },
+  { front: "glucose", back: "葡萄糖", section: "en-cn" },
+  { front: "lipid", back: "脂类", section: "en-cn" },
+  { front: "amino acids", back: "氨基酸", section: "en-cn" },
+  { front: "nucleic acids", back: "核酸", section: "en-cn" },
+  { front: "protein", back: "蛋白质", section: "en-cn" },
+];
+
+// ── STATE ──
+let currentSection = 'all';
+let words = [...ALL_WORDS];          // full deck for current section
+let queue = [];                       // indices into `words` yet to review
+let mastered = new Set();            // indices into `words`
+let forgotten = new Set();           // indices into `words` for review
+let currentIdx = -1;                 // index into `queue`
+let currentWordIdx = -1;             // index into `words`
+let isFlipped = false;
+let animating = false;               // true while flip-back animation is running
+
+// ── DOM refs ──
+const cardContainer = document.getElementById('card-container');
+const cardEl = document.getElementById('card');
+const frontText = document.getElementById('front-text');
+const backText = document.getElementById('back-text');
+const frontTag = document.getElementById('front-tag');
+const backTag = document.getElementById('back-tag');
+const cardIndex = document.getElementById('card-index');
+const progressBar = document.getElementById('progress-bar');
+const statRemain = document.getElementById('stat-remain');
+const statMastered = document.getElementById('stat-mastered');
+const statReview = document.getElementById('stat-review');
+const wordListModal = document.getElementById('word-list-modal');
+const wordListInner = document.getElementById('word-list-inner');
+const btnForgot = document.getElementById('btn-forgot');
+const btnRemember = document.getElementById('btn-remember');
+
+// ── Filter words by section ──
+function getFilteredWords() {
+  if (currentSection === 'all') return [...ALL_WORDS];
+  return ALL_WORDS.filter(w => w.section === currentSection);
+}
+
+// ── Build queue (shuffled indices) ──
+function buildQueue() {
+  queue = words.map((_, i) => i);
+  shuffle(queue);
+  currentIdx = 0;
+  currentWordIdx = queue[0];
+  isFlipped = false;
+  animating = false;
+  cardEl.classList.remove('flipped');
+  updateCard();
+  updateStats();
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+}
+
+// ── Update card display ──
+function updateCard() {
+  if (currentWordIdx === -1 || queue.length === 0) {
+    frontText.textContent = '🎉';
+    backText.textContent = '全部复习完毕！';
+    frontTag.textContent = '';
+    backTag.textContent = '';
+    cardIndex.textContent = '已完成';
+    btnForgot.disabled = true;
+    btnRemember.disabled = true;
+    progressBar.style.width = '100%';
+    statRemain.textContent = '0';
+    return;
+  }
+  btnForgot.disabled = false;
+  btnRemember.disabled = false;
+  const w = words[currentWordIdx];
+  frontText.textContent = w.front;
+  backText.textContent = w.back;
+
+  // Tag
+  if (w.section === 'en-cn') {
+    frontTag.textContent = 'English';
+    backTag.textContent = '中文';
+  } else {
+    frontTag.textContent = '术语';
+    backTag.textContent = '释义';
+  }
+
+  cardIndex.textContent = `第 ${currentIdx + 1} / ${queue.length} 个`;
+  updateStats();
+}
+
+// ── Flip ──
+function flipCard() {
+  if (queue.length === 0 || currentWordIdx === -1) return;
+  if (animating) return; // ignore flips during animation
+  isFlipped = !isFlipped;
+  cardEl.classList.toggle('flipped', isFlipped);
+}
+
+// ── Mark remembered ──
+function markRemembered() {
+  if (queue.length === 0 || currentWordIdx === -1 || animating) return;
+  mastered.add(currentWordIdx);
+  forgotten.delete(currentWordIdx);
+  advanceCard();
+}
+
+// ── Mark forgot ──
+function markForgot() {
+  if (queue.length === 0 || currentWordIdx === -1 || animating) return;
+  mastered.delete(currentWordIdx);
+  forgotten.add(currentWordIdx);
+  // Re-add to end of queue for spaced repetition
+  queue.push(currentWordIdx);
+  advanceCard();
+}
+
+// ── Advance to next card ──
+function advanceCard() {
+  // ---- BUG FIX ----
+  // If the card was flipped, we need to flip it back first and
+  // delay content update until the animation completes. Otherwise
+  // updateCard() overwrites backText mid-animation and the user
+  // glimpses the next card's answer during flip-back.
+  const wasFlipped = isFlipped;
+
+  currentIdx++;
+
+  // Manage queue (same logic, before any DOM changes)
+  if (currentIdx >= queue.length) {
+    if (forgotten.size > 0) {
+      queue = Array.from(forgotten);
+      shuffle(queue);
+      forgotten.clear();
+      currentIdx = 0;
+    } else if (mastered.size >= words.length) {
+      currentWordIdx = -1;
+      queue = [];
+      currentIdx = -1;
+    } else {
+      const unmastered = words.map((_, i) => i).filter(i => !mastered.has(i));
+      if (unmastered.length === 0) {
+        currentWordIdx = -1;
+        queue = [];
+        currentIdx = -1;
+      } else {
+        queue = unmastered;
+        shuffle(queue);
+        currentIdx = 0;
+      }
+    }
+  }
+
+  // Reset flip state
+  isFlipped = false;
+  cardEl.classList.remove('flipped');
+
+  const scheduledIdx = currentIdx;
+
+  if (wasFlipped) {
+    // BUG FIX: Card was showing answer. Start flip-back animation,
+    // then update content only after it finishes (500ms).
+    animating = true;
+    btnForgot.disabled = true;
+    btnRemember.disabled = true;
+    setTimeout(() => {
+      animating = false;
+      // Guard: only apply if no further advanceCard() happened during animation
+      if (currentIdx === scheduledIdx) {
+        currentWordIdx = queue.length > 0 && currentIdx < queue.length ? queue[currentIdx] : -1;
+        updateCard();
+      }
+    }, 500);
+  } else {
+    currentWordIdx = queue.length > 0 && currentIdx < queue.length ? queue[currentIdx] : -1;
+    updateCard();
+  }
+}
+
+// ── Stats ──
+function updateStats() {
+  const remain = queue.length > 0 && currentIdx < queue.length ? queue.length - currentIdx : 0;
+  statRemain.textContent = remain;
+  statMastered.textContent = mastered.size;
+  statReview.textContent = forgotten.size;
+  const total = words.length;
+  const done = total > 0 ? mastered.size : 0;
+  progressBar.style.width = total > 0 ? Math.round((done / total) * 100) + '%' : '0%';
+}
+
+// ── Shuffle all ──
+function shuffleAll() {
+  words = getFilteredWords();
+  mastered.clear();
+  forgotten.clear();
+  buildQueue();
+}
+
+// ── Review forgotten ──
+function reviewForgotten() {
+  if (animating) return;
+  if (forgotten.size === 0) {
+    // Review all words not yet mastered
+    const candidates = words.map((_, i) => i).filter(i => !mastered.has(i));
+    if (candidates.length === 0) {
+      alert('所有词汇都已掌握！');
+      return;
+    }
+    queue = candidates;
+    shuffle(queue);
+  } else {
+    queue = Array.from(forgotten);
+    shuffle(queue);
+    forgotten.clear();
+  }
+  currentIdx = 0;
+  currentWordIdx = queue[0];
+  isFlipped = false;
+  cardEl.classList.remove('flipped');
+  updateCard();
+}
+
+// ── Reset all ──
+function resetAll() {
+  if (animating) return;
+  words = getFilteredWords();
+  mastered.clear();
+  forgotten.clear();
+  buildQueue();
+}
+
+// ── Word list ──
+function toggleWordList() {
+  const isOpen = wordListModal.classList.contains('open');
+  if (isOpen) {
+    wordListModal.classList.remove('open');
+  } else {
+    const filtered = getFilteredWords();
+    wordListInner.innerHTML = `
+      <h3>📋 词汇表（${filtered.length} 个）</h3>
+      ${filtered.map((w, i) => `
+        <div class="word-row">
+          <span class="en">${w.front}</span>
+          <span class="cn">${w.back}</span>
+        </div>
+      `).join('')}
+    `;
+    wordListModal.classList.add('open');
+  }
+}
+
+// ── Section switch ──
+document.querySelectorAll('.pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    if (animating) return;
+    document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+    currentSection = pill.dataset.section;
+    resetAll();
+  });
+});
+
+// ── Keyboard shortcuts ──
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'BUTTON') return;
+  if (animating) return;
+  switch (e.key) {
+    case ' ': case 'Enter':
+      e.preventDefault();
+      flipCard();
+      break;
+    case 'ArrowLeft':
+      markForgot();
+      break;
+    case 'ArrowRight':
+      markRemembered();
+      break;
+    case 'r':
+      resetAll();
+      break;
+    case 'f':
+      reviewForgotten();
+      break;
+  }
+});
+
+// ── Init ──
+words = getFilteredWords();
+buildQueue();
+</script>
+</body>
+</html>

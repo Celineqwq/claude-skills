@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>医学遗传学 - 词汇复习</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --card-bg: #1e293b;
+    --card-front: #1e293b;
+    --card-back: #1e293b;
+    --text: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --accent: #38bdf8;
+    --accent-dim: #0c4a6e;
+    --correct: #34d399;
+    --correct-dim: #064e3b;
+    --wrong: #f87171;
+    --wrong-dim: #450a0a;
+    --border: #334155;
+    --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+  }
+
+  /* ── Header ── */
+  .header {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  .header h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), #818cf8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .header .subtitle {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-top: 4px;
+  }
+
+  /* ── Stats bar ── */
+  .stats-bar {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+  .stat {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 20px;
+    text-align: center;
+    min-width: 80px;
+  }
+  .stat .val {
+    font-size: 1.4rem;
+    font-weight: 700;
+  }
+  .stat .lbl {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+  }
+  .stat.remain .val { color: var(--accent); }
+  .stat.mastered .val { color: var(--correct); }
+  .stat.review .val { color: #fbbf24; }
+
+  /* ── Card ── */
+  .card-container {
+    perspective: 1000px;
+    width: 100%;
+    max-width: 520px;
+    margin-bottom: 20px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .card {
+    position: relative;
+    width: 100%;
+    min-height: 240px;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-style: preserve-3d;
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+  }
+  .card.flipped { transform: rotateY(180deg); }
+
+  .card-face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 30px;
+    border: 1px solid var(--border);
+  }
+  .card-front { background: var(--card-bg); }
+  .card-back {
+    background: var(--card-bg);
+    transform: rotateY(180deg);
+  }
+
+  .card .term {
+    font-size: 1.8rem;
+    font-weight: 800;
+    text-align: center;
+    letter-spacing: 0.02em;
+    word-break: break-word;
+  }
+  .card .hint {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 12px;
+  }
+  .card .definition {
+    font-size: 1.15rem;
+    line-height: 1.7;
+    text-align: center;
+    color: #cbd5e1;
+  }
+  .card .lang-tag {
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  /* ── Card progress dots ── */
+  .card-index {
+    margin-bottom: 12px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+  }
+
+  /* ── Buttons ── */
+  .actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 24px;
+  }
+  .btn {
+    border: none;
+    border-radius: 12px;
+    padding: 14px 28px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .btn:active { transform: scale(0.96); }
+
+  .btn-forgot {
+    background: var(--wrong-dim);
+    color: var(--wrong);
+    border: 1px solid #7f1d1d;
+  }
+  .btn-forgot:hover { background: #7f1d1d; }
+
+  .btn-remember {
+    background: var(--correct-dim);
+    color: var(--correct);
+    border: 1px solid #065f46;
+  }
+  .btn-remember:hover { background: #065f46; }
+
+  .btn-flip {
+    background: var(--accent-dim);
+    color: var(--accent);
+    border: 1px solid #0e7490;
+  }
+  .btn-flip:hover { background: #0e7490; }
+
+  .btn-secondary {
+    background: var(--card-bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { background: var(--border); }
+
+  .btn-small {
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    border-radius: 8px;
+  }
+
+  /* ── Progress bar ── */
+  .progress-wrap {
+    width: 100%;
+    max-width: 520px;
+    background: var(--border);
+    border-radius: 10px;
+    height: 8px;
+    margin-bottom: 28px;
+    overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%;
+    border-radius: 10px;
+    background: linear-gradient(90deg, var(--accent), #818cf8);
+    transition: width 0.4s ease;
+  }
+
+  /* ── Toolbar ── */
+  .toolbar {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 10px;
+  }
+
+  /* ── Word list modal ── */
+  .word-list {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .word-list.open { display: flex; }
+  .word-list-inner {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 75vh;
+    overflow-y: auto;
+  }
+  .word-list-inner h3 { margin-bottom: 16px; }
+  .word-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.9rem;
+    gap: 16px;
+  }
+  .word-row .en { font-weight: 600; color: var(--accent); min-width: 0; }
+  .word-row .cn { color: var(--text-secondary); text-align: right; }
+
+  /* ── Section toggle ── */
+  .section-pills {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 16px;
+  }
+  .pill {
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-secondary);
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .pill.active { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
+
+  /* ── Responsive ── */
+  @media (max-width: 480px) {
+    .card { min-height: 200px; }
+    .card .term { font-size: 1.4rem; }
+    .card .definition { font-size: 1rem; }
+    .btn { padding: 12px 20px; font-size: 0.9rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🧬 医学遗传学 · 词汇复习</h1>
+  <p class="subtitle">点击卡片翻转 · 选择"记得"或"忘了"来追踪进度</p>
+</div>
+
+<!-- Section filter -->
+<div class="section-pills">
+  <button class="pill active" data-section="all">全部词汇</button>
+  <button class="pill" data-section="en-cn">英 → 中</button>
+  <button class="pill" data-section="cn-def">中 → 释义</button>
+</div>
+
+<!-- Stats -->
+<div class="stats-bar">
+  <div class="stat remain"><div class="val" id="stat-remain">0</div><div class="lbl">剩余</div></div>
+  <div class="stat mastered"><div class="val" id="stat-mastered">0</div><div class="lbl">已掌握</div></div>
+  <div class="stat review"><div class="val" id="stat-review">0</div><div class="lbl">待复习</div></div>
+</div>
+
+<!-- Progress bar -->
+<div class="progress-wrap">
+  <div class="progress-bar" id="progress-bar" style="width:0%"></div>
+</div>
+
+<!-- Card index -->
+<div class="card-index" id="card-index">第 1 个</div>
+
+<!-- Flashcard -->
+<div class="card-container" id="card-container" onclick="flipCard()">
+  <div class="card" id="card">
+    <div class="card-face card-front">
+      <span class="lang-tag" id="front-tag">术语</span>
+      <div class="term" id="front-text">—</div>
+      <div class="hint">👆 点击翻转查看释义</div>
+    </div>
+    <div class="card-face card-back">
+      <span class="lang-tag" id="back-tag">释义</span>
+      <div class="definition" id="back-text">—</div>
+    </div>
+  </div>
+</div>
+
+<!-- Action buttons -->
+<div class="actions">
+  <button class="btn btn-forgot" onclick="markForgot()" id="btn-forgot">😕 忘了</button>
+  <button class="btn btn-flip" onclick="flipCard()">🔄 翻转</button>
+  <button class="btn btn-remember" onclick="markRemembered()" id="btn-remember">✅ 记得</button>
+</div>
+
+<!-- Toolbar -->
+<div class="toolbar">
+  <button class="btn btn-secondary btn-small" onclick="shuffleAll()">🔀 打乱重来</button>
+  <button class="btn btn-secondary btn-small" onclick="reviewForgotten()">📝 复习遗忘词</button>
+  <button class="btn btn-secondary btn-small" onclick="toggleWordList()">📋 词汇表</button>
+  <button class="btn btn-secondary btn-small" onclick="resetAll()">🔄 全部重置</button>
+</div>
+
+<!-- Word list modal -->
+<div class="word-list" id="word-list-modal" onclick="if(event.target===this) toggleWordList()">
+  <div class="word-list-inner" id="word-list-inner"></div>
+</div>
+
+<script>
+// ── DATA ──
+const ALL_WORDS = [
+  // ===== Section A: English → 中文 =====
+  // (01) existing
+  { front: "codominance", back: "共显性", section: "en-cn" },
+  // (02) existing
+  { front: "dominant", back: "显性（等位基因/性状）", section: "en-cn" },
+  // (03) existing
+  { front: "dynamic mutation", back: "动态突变", section: "en-cn" },
+  // (04) existing
+  { front: "gene frequency", back: "基因频率", section: "en-cn" },
+  // (05) existing
+  { front: "gene mutation", back: "基因突变", section: "en-cn" },
+  // (06) existing
+  { front: "genotype", back: "基因型", section: "en-cn" },
+  // (07) existing
+  { front: "hemoglobin", back: "血红蛋白", section: "en-cn" },
+  // (08) existing
+  { front: "homozygote", back: "纯合子", section: "en-cn" },
+  // (09) existing
+  { front: "medical genetics", back: "医学遗传学", section: "en-cn" },
+  // (10) existing
+  { front: "minor gene", back: "微效基因", section: "en-cn" },
+  // (11) existing
+  { front: "molecular disease", back: "分子病", section: "en-cn" },
+  // (12) existing
+  { front: "pedigree", back: "系谱图", section: "en-cn" },
+  // (13) existing
+  { front: "polygenic disease", back: "多基因遗传病", section: "en-cn" },
+  // (14) existing
+  { front: "proband", back: "先证者", section: "en-cn" },
+  // (15) existing
+  { front: "sickle cell anemia", back: "镰状细胞贫血", section: "en-cn" },
+  // (16) existing
+  { front: "inbreeding coefficient", back: "近婚系数", section: "en-cn" },
+  // (17) new
+  { front: "chromosome", back: "染色体", section: "en-cn" },
+  // (18) new
+  { front: "karyotype", back: "核型", section: "en-cn" },
+  // (19) new
+  { front: "karyotype analysis", back: "核型分析", section: "en-cn" },
+  // (20) new
+  { front: "landmark", back: "界标", section: "en-cn" },
+  // (21) new
+  { front: "chromosome aberration", back: "染色体畸变", section: "en-cn" },
+  // (22) new
+  { front: "euploid", back: "整倍体", section: "en-cn" },
+  // (23) new
+  { front: "mosaic", back: "嵌合体", section: "en-cn" },
+  // (24) new
+  { front: "deletion", back: "缺失", section: "en-cn" },
+  // (25) new
+  { front: "inversion", back: "倒位", section: "en-cn" },
+  // (26) new
+  { front: "translocation", back: "易位", section: "en-cn" },
+  // (27) new
+  { front: "epigenetics", back: "表观遗传学", section: "en-cn" },
+  // (28) new
+  { front: "genomic imprinting", back: "基因组印记", section: "en-cn" },
+  // (29) new
+  { front: "tumor", back: "肿瘤", section: "en-cn" },
+  // (30) new
+  { front: "cancer", back: "癌症", section: "en-cn" },
+  // (31) new
+  { front: "proto-oncogene", back: "原癌基因", section: "en-cn" },
+  // (32) new
+  { front: "oncogene", back: "癌基因", section: "en-cn" },
+  // (33) new
+  { front: "tumor suppressor gene", back: "肿瘤抑制基因", section: "en-cn" },
+  // (34) new
+  { front: "marker chromosome", back: "标记染色体", section: "en-cn" },
+  // (35) new
+  { front: "prenatal diagnosis", back: "产前诊断", section: "en-cn" },
+  // (36) new
+  { front: "gene diagnosis", back: "基因诊断", section: "en-cn" },
+  // (37) new
+  { front: "genetic counseling", back: "遗传咨询", section: "en-cn" },
+  // (38) new
+  { front: "gene therapy", back: "基因治疗", section: "en-cn" },
+  // (39) new
+  { front: "NIPT", back: "无创产前检测", section: "en-cn" },
+
+  // ===== Section B: 中文术语 → 详细释义 =====
+  // existing cn-def entries (12)
+  { front: "表型", back: "基因型所表达的能够显示出的遗传性状", section: "cn-def" },
+  { front: "等位基因", back: "在同源染色体的特定基因座上的不同形式的基因，影响同一类表型，但产生不同的表型效应", section: "cn-def" },
+  { front: "动态突变", back: "简单串联重复序列的拷贝数不稳定扩增", section: "cn-def" },
+  { front: "基因座", back: "指基因组中任何一个已经确定的位置上的基因或基因的一部分或具有调控作用的DNA序列", section: "cn-def" },
+  { front: "外显率", back: "某一在杂合状态下的显性基因或纯合隐性基因在某一群体中表现出相应疾病表型的百分率", section: "cn-def" },
+  { front: "无义突变", back: "指碱基替换后使原来编码某种氨基酸的密码子变成终止密码子，导致多肽链合成提前终止", section: "cn-def" },
+  { front: "系谱", back: "指某种遗传病患者与家庭各成员相互关系的图解", section: "cn-def" },
+  { front: "血红蛋白病", back: "指珠蛋白分子结构或合成量异常所引起的疾病", section: "cn-def" },
+  { front: "遗传率", back: "在多基因病中，遗传因素所起的作用的大小", section: "cn-def" },
+  { front: "遗传异质性", back: "表型相同的个体，可能具有不同的基因型", section: "cn-def" },
+  { front: "易患性", back: "指遗传基础和环境因素共同作用决定一个个体是否患病的可能性", section: "cn-def" },
+  { front: "阈值", back: "当一个个体的易患性到达一定限度后，这个个体患病，这个限度就是阈值", section: "cn-def" },
+  // new cn-def entries
+  { front: "核型/核型分析", back: "核型是一个体细胞的全部染色体所构成的图像。核型分析是将待测细胞的全部染色体按照丹佛体制经配对、排列，进行识别和判定的分析过程。", section: "cn-def" },
+  { front: "染色体多态性", back: "又称染色体正常变异，是指在正常人群中存在的一些恒定的染色体微小变异，包括染色体片段的大小或染色体带纹的差异等。", section: "cn-def" },
+  { front: "嵌合体", back: "是一个个体内同时存在两种或两种以上核型的细胞系。", section: "cn-def" },
+  { front: "界标", back: "是指染色体上稳定存在并具有显著形态学特征的结构区域，是识别显带染色体的重要指标。", section: "cn-def" },
+  { front: "染色体畸变", back: "是指染色体发生数目和结构上的异常改变。", section: "cn-def" },
+  { front: "染色体组", back: "人类正常生殖细胞（精子或卵子）各含有23条染色体，称为一个染色体组。", section: "cn-def" },
+  { front: "缺失", back: "指染色体某处发生断裂后，产生的无着丝粒片段丢失所形成的一种结构畸变。", section: "cn-def" },
+  { front: "倒位", back: "一条染色体发生两次断裂，两断裂点中间片段旋转180°又重接即称倒位。", section: "cn-def" },
+  { front: "相互易位", back: "两条非同源染色体分别发生一次断裂，相互交换片段后重接。", section: "cn-def" },
+  { front: "罗伯逊易位", back: "是由近端着丝粒染色体（13～15号和21～22号染色体）的长臂通过着丝粒融合产生的一种特殊类型的易位。", section: "cn-def" },
+  { front: "癌基因", back: "是指能够使细胞发生癌变的基因，由原癌基因转化而来，如SRC、HRAS。", section: "cn-def" },
+  { front: "标记染色体", back: "在肿瘤的发生、发展过程中，由于肿瘤细胞的增殖失控等原因，导致细胞有丝分裂异常并产生部分染色体断裂与重接，形成了一些特定的结构异常的染色体。", section: "cn-def" },
+  { front: "Ph染色体", back: "1960年在慢性髓细胞性白血病中发现的一条异常染色体，由于是在美国费城发现的，故命名为费城染色体，为9号和22号染色体易位产生的衍生染色体。", section: "cn-def" },
+  { front: "肿瘤抑制基因", back: "指正常细胞中抑制肿瘤发生的基因，与癌基因作用相反，也称抑癌基因或隐性癌基因，如TP53、P16。", section: "cn-def" },
+  { front: "表观遗传学", back: "是指DNA序列不发生变化，但基因表达却发生了可遗传的改变的科学。", section: "cn-def" },
+  { front: "DNA甲基化", back: "在哺乳动物和脊椎动物中，发生在CpG二核苷酸中胞嘧啶第5位碳原子上。由DNA甲基转移酶以极其保守的机制将甲基基团添加在DNA分子胞嘧啶上，形成5-甲基胞嘧啶。", section: "cn-def" },
+  { front: "基因组印记", back: "又称遗传印记，是指在受精卵形成过程中，来源于父亲或者母亲的等位基因被修饰后，该印记导致下一代仅仅排他性表达父源或者母源等位基因其中之一的遗传现象。", section: "cn-def" },
+  { front: "遗传病的诊断", back: "指临床医生根据患者的症状、体征以及各种辅助检查结果并结合遗传学分析，确认其是否患有某种遗传病，判断其遗传方式及遗传规律。", section: "cn-def" },
+  { front: "基因诊断", back: "又称为分子诊断，指利用分子生物学技术，直接检测遗传物质的结构或表达水平的变化情况，从而对特定疾病进行诊断的方法和过程。", section: "cn-def" },
+  { front: "产前诊断", back: "也称出生前诊断，是对胚胎或胎儿在出生前是否患有某种遗传病或先天性畸形做出的诊断。", section: "cn-def" },
+  { front: "基因治疗", back: "是将基因或RNA导入人体细胞，补偿或修复患者细胞内有缺陷的基因，改变患者细胞的基因表达，使细胞恢复正常功能，从而达到治疗遗传病目的的技术方法。", section: "cn-def" },
+];
+
+// ── STATE ──
+let currentSection = 'all';
+let words = [...ALL_WORDS];          // full deck for current section
+let queue = [];                       // indices into `words` yet to review
+let mastered = new Set();            // indices into `words`
+let forgotten = new Set();           // indices into `words` for review
+let currentIdx = -1;                 // index into `queue`
+let currentWordIdx = -1;             // index into `words`
+let isFlipped = false;
+let animating = false;               // true while flip-back animation is running
+
+// ── DOM refs ──
+const cardContainer = document.getElementById('card-container');
+const cardEl = document.getElementById('card');
+const frontText = document.getElementById('front-text');
+const backText = document.getElementById('back-text');
+const frontTag = document.getElementById('front-tag');
+const backTag = document.getElementById('back-tag');
+const cardIndex = document.getElementById('card-index');
+const progressBar = document.getElementById('progress-bar');
+const statRemain = document.getElementById('stat-remain');
+const statMastered = document.getElementById('stat-mastered');
+const statReview = document.getElementById('stat-review');
+const wordListModal = document.getElementById('word-list-modal');
+const wordListInner = document.getElementById('word-list-inner');
+const btnForgot = document.getElementById('btn-forgot');
+const btnRemember = document.getElementById('btn-remember');
+
+// ── Filter words by section ──
+function getFilteredWords() {
+  if (currentSection === 'all') return [...ALL_WORDS];
+  return ALL_WORDS.filter(w => w.section === currentSection);
+}
+
+// ── Build queue (shuffled indices) ──
+function buildQueue() {
+  queue = words.map((_, i) => i);
+  shuffle(queue);
+  currentIdx = 0;
+  currentWordIdx = queue[0];
+  isFlipped = false;
+  animating = false;
+  cardEl.classList.remove('flipped');
+  updateCard();
+  updateStats();
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+}
+
+// ── Update card display ──
+function updateCard() {
+  if (currentWordIdx === -1 || queue.length === 0) {
+    frontText.textContent = '🎉';
+    backText.textContent = '全部复习完毕！';
+    frontTag.textContent = '';
+    backTag.textContent = '';
+    cardIndex.textContent = '已完成';
+    btnForgot.disabled = true;
+    btnRemember.disabled = true;
+    progressBar.style.width = '100%';
+    statRemain.textContent = '0';
+    return;
+  }
+  btnForgot.disabled = false;
+  btnRemember.disabled = false;
+  const w = words[currentWordIdx];
+  frontText.textContent = w.front;
+  backText.textContent = w.back;
+
+  // Tag
+  if (w.section === 'en-cn') {
+    frontTag.textContent = 'English';
+    backTag.textContent = '中文';
+  } else {
+    frontTag.textContent = '术语';
+    backTag.textContent = '释义';
+  }
+
+  cardIndex.textContent = `第 ${currentIdx + 1} / ${queue.length} 个`;
+  updateStats();
+}
+
+// ── Flip ──
+function flipCard() {
+  if (queue.length === 0 || currentWordIdx === -1) return;
+  if (animating) return; // ignore flips during animation
+  isFlipped = !isFlipped;
+  cardEl.classList.toggle('flipped', isFlipped);
+}
+
+// ── Mark remembered ──
+function markRemembered() {
+  if (queue.length === 0 || currentWordIdx === -1 || animating) return;
+  mastered.add(currentWordIdx);
+  forgotten.delete(currentWordIdx);
+  advanceCard();
+}
+
+// ── Mark forgot ──
+function markForgot() {
+  if (queue.length === 0 || currentWordIdx === -1 || animating) return;
+  mastered.delete(currentWordIdx);
+  forgotten.add(currentWordIdx);
+  // Re-add to end of queue for spaced repetition
+  queue.push(currentWordIdx);
+  advanceCard();
+}
+
+// ── Advance to next card ──
+function advanceCard() {
+  // ---- BUG FIX ----
+  // If the card was flipped, we need to flip it back first and
+  // delay content update until the animation completes. Otherwise
+  // updateCard() overwrites backText mid-animation and the user
+  // glimpses the next card's answer during flip-back.
+  const wasFlipped = isFlipped;
+
+  currentIdx++;
+
+  // Manage queue (same logic, before any DOM changes)
+  if (currentIdx >= queue.length) {
+    if (forgotten.size > 0) {
+      queue = Array.from(forgotten);
+      shuffle(queue);
+      forgotten.clear();
+      currentIdx = 0;
+    } else if (mastered.size >= words.length) {
+      currentWordIdx = -1;
+      queue = [];
+      currentIdx = -1;
+    } else {
+      const unmastered = words.map((_, i) => i).filter(i => !mastered.has(i));
+      if (unmastered.length === 0) {
+        currentWordIdx = -1;
+        queue = [];
+        currentIdx = -1;
+      } else {
+        queue = unmastered;
+        shuffle(queue);
+        currentIdx = 0;
+      }
+    }
+  }
+
+  // Reset flip state
+  isFlipped = false;
+  cardEl.classList.remove('flipped');
+
+  const scheduledIdx = currentIdx;
+
+  if (wasFlipped) {
+    // BUG FIX: Card was showing answer. Start flip-back animation,
+    // then update content only after it finishes (500ms).
+    animating = true;
+    btnForgot.disabled = true;
+    btnRemember.disabled = true;
+    setTimeout(() => {
+      animating = false;
+      // Guard: only apply if no further advanceCard() happened during animation
+      if (currentIdx === scheduledIdx) {
+        currentWordIdx = queue.length > 0 && currentIdx < queue.length ? queue[currentIdx] : -1;
+        updateCard();
+      }
+    }, 500);
+  } else {
+    currentWordIdx = queue.length > 0 && currentIdx < queue.length ? queue[currentIdx] : -1;
+    updateCard();
+  }
+}
+
+// ── Stats ──
+function updateStats() {
+  const remain = queue.length > 0 && currentIdx < queue.length ? queue.length - currentIdx : 0;
+  statRemain.textContent = remain;
+  statMastered.textContent = mastered.size;
+  statReview.textContent = forgotten.size;
+  const total = words.length;
+  const done = total > 0 ? mastered.size : 0;
+  progressBar.style.width = total > 0 ? Math.round((done / total) * 100) + '%' : '0%';
+}
+
+// ── Shuffle all ──
+function shuffleAll() {
+  words = getFilteredWords();
+  mastered.clear();
+  forgotten.clear();
+  buildQueue();
+}
+
+// ── Review forgotten ──
+function reviewForgotten() {
+  if (animating) return;
+  if (forgotten.size === 0) {
+    // Review all words not yet mastered
+    const candidates = words.map((_, i) => i).filter(i => !mastered.has(i));
+    if (candidates.length === 0) {
+      alert('所有词汇都已掌握！');
+      return;
+    }
+    queue = candidates;
+    shuffle(queue);
+  } else {
+    queue = Array.from(forgotten);
+    shuffle(queue);
+    forgotten.clear();
+  }
+  currentIdx = 0;
+  currentWordIdx = queue[0];
+  isFlipped = false;
+  cardEl.classList.remove('flipped');
+  updateCard();
+}
+
+// ── Reset all ──
+function resetAll() {
+  if (animating) return;
+  words = getFilteredWords();
+  mastered.clear();
+  forgotten.clear();
+  buildQueue();
+}
+
+// ── Word list ──
+function toggleWordList() {
+  const isOpen = wordListModal.classList.contains('open');
+  if (isOpen) {
+    wordListModal.classList.remove('open');
+  } else {
+    const filtered = getFilteredWords();
+    wordListInner.innerHTML = `
+      <h3>📋 词汇表（${filtered.length} 个）</h3>
+      ${filtered.map((w, i) => `
+        <div class="word-row">
+          <span class="en">${w.front}</span>
+          <span class="cn">${w.back}</span>
+        </div>
+      `).join('')}
+    `;
+    wordListModal.classList.add('open');
+  }
+}
+
+// ── Section switch ──
+document.querySelectorAll('.pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    if (animating) return;
+    document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+    currentSection = pill.dataset.section;
+    resetAll();
+  });
+});
+
+// ── Keyboard shortcuts ──
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'BUTTON') return;
+  if (animating) return;
+  switch (e.key) {
+    case ' ': case 'Enter':
+      e.preventDefault();
+      flipCard();
+      break;
+    case 'ArrowLeft':
+      markForgot();
+      break;
+    case 'ArrowRight':
+      markRemembered();
+      break;
+    case 'r':
+      resetAll();
+      break;
+    case 'f':
+      reviewForgotten();
+      break;
+  }
+});
+
+// ── Init ──
+words = getFilteredWords();
+buildQueue();
+</script>
+</body>
+</html>

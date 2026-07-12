@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>眼视光光学 · 复习卡片</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --card-bg: #1e293b;
+    --card-front: #1e293b;
+    --card-back: #1e293b;
+    --text: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --accent: #38bdf8;
+    --accent-dim: #0c4a6e;
+    --correct: #34d399;
+    --correct-dim: #064e3b;
+    --wrong: #f87171;
+    --wrong-dim: #450a0a;
+    --border: #334155;
+    --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+  }
+
+  .header { text-align: center; margin-bottom: 24px; }
+  .header h1 {
+    font-size: 1.8rem; font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), #818cf8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .header .subtitle {
+    font-size: 0.85rem; color: var(--text-secondary);
+    margin-top: 6px; line-height: 1.5;
+  }
+
+  .section-pills {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    justify-content: center; margin-bottom: 16px;
+  }
+  .pill {
+    padding: 6px 16px; border-radius: 20px; font-size: 0.8rem;
+    font-weight: 600; cursor: pointer; border: 1px solid var(--border);
+    background: transparent; color: var(--text-secondary);
+    transition: all 0.2s; font-family: inherit;
+  }
+  .pill.active { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
+  .pill .count { color: var(--text-secondary); font-weight: 400; }
+
+  .stats-bar {
+    display: flex; gap: 20px; flex-wrap: wrap;
+    justify-content: center; margin-bottom: 20px;
+  }
+  .stat {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 20px; text-align: center; min-width: 80px;
+  }
+  .stat .val { font-size: 1.4rem; font-weight: 700; }
+  .stat .lbl { font-size: 0.75rem; color: var(--text-secondary); }
+  .stat.remain .val { color: var(--accent); }
+  .stat.mastered .val { color: var(--correct); }
+  .stat.review .val { color: #fbbf24; }
+
+  .card-container {
+    perspective: 1000px; width: 100%; max-width: 520px;
+    margin-bottom: 20px; cursor: pointer; -webkit-tap-highlight-color: transparent;
+  }
+  .card {
+    position: relative; width: 100%; min-height: 260px;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-style: preserve-3d; border-radius: 20px; box-shadow: var(--shadow);
+  }
+  .card.flipped { transform: rotateY(180deg); }
+
+  .card-face {
+    position: absolute; inset: 0;
+    backface-visibility: hidden; -webkit-backface-visibility: hidden;
+    border-radius: 20px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 40px 30px; border: 1px solid var(--border);
+  }
+  .card-front { background: var(--card-bg); }
+  .card-back { background: var(--card-bg); transform: rotateY(180deg); }
+
+  .card .term {
+    font-size: 1.8rem; font-weight: 800; text-align: center;
+    letter-spacing: 0.02em; word-break: break-word;
+  }
+  .card .hint { font-size: 0.8rem; color: var(--text-secondary); margin-top: 12px; }
+  .card .definition {
+    font-size: 1.15rem; line-height: 1.7; text-align: center; color: #cbd5e1;
+  }
+  .card .lang-tag {
+    position: absolute; top: 16px; right: 20px;
+    font-size: 0.7rem; color: var(--text-secondary);
+    text-transform: uppercase; letter-spacing: 0.1em;
+  }
+
+  .card-index { margin-bottom: 12px; font-size: 0.85rem; color: var(--text-secondary); }
+
+  .actions {
+    display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-bottom: 24px;
+  }
+  .btn {
+    border: none; border-radius: 12px; padding: 14px 28px;
+    font-size: 1rem; font-weight: 600; cursor: pointer;
+    transition: all 0.2s; font-family: inherit;
+  }
+  .btn:active { transform: scale(0.96); }
+  .btn:disabled { opacity: 0.4; cursor: default; transform: none; }
+
+  .btn-back { background: var(--card-bg); color: var(--text-secondary); border: 1px solid var(--border); }
+  .btn-back:hover { background: var(--border); }
+  .btn-forgot { background: var(--wrong-dim); color: var(--wrong); border: 1px solid #7f1d1d; }
+  .btn-forgot:hover { background: #7f1d1d; }
+  .btn-remember { background: var(--correct-dim); color: var(--correct); border: 1px solid #065f46; }
+  .btn-remember:hover { background: #065f46; }
+  .btn-flip { background: var(--accent-dim); color: var(--accent); border: 1px solid #0e7490; }
+  .btn-flip:hover { background: #0e7490; }
+  .btn-secondary { background: var(--card-bg); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { background: var(--border); }
+  .btn-small { padding: 8px 16px; font-size: 0.85rem; border-radius: 8px; }
+
+  .progress-wrap {
+    width: 100%; max-width: 520px; background: var(--border);
+    border-radius: 10px; height: 8px; margin-bottom: 28px; overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%; border-radius: 10px;
+    background: linear-gradient(90deg, var(--accent), #818cf8);
+    transition: width 0.4s ease;
+  }
+
+  .toolbar { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-bottom: 10px; }
+
+  .word-list {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+    z-index: 100; align-items: center; justify-content: center;
+  }
+  .word-list.open { display: flex; }
+  .word-list-inner {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: 16px; padding: 28px; max-width: 640px; width: 90%; max-height: 80vh;
+    display: flex; flex-direction: column;
+  }
+  .word-list-inner h3 { margin-bottom: 12px; font-size: 1.1rem; }
+  .word-list-search {
+    width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border);
+    background: var(--bg); color: var(--text); font-size: 0.9rem;
+    font-family: inherit; margin-bottom: 12px; outline: none;
+  }
+  .word-list-search:focus { border-color: var(--accent); }
+  .word-list-header {
+    display: grid; grid-template-columns: 40px 1fr 1fr; gap: 12px;
+    padding: 8px 0; font-size: 0.8rem; color: var(--text-secondary);
+    border-bottom: 1px solid var(--border); font-weight: 600;
+  }
+  .word-list-body { overflow-y: auto; max-height: 55vh; }
+  .word-row {
+    display: grid; grid-template-columns: 40px 1fr 1fr; gap: 12px;
+    padding: 8px 0; border-bottom: 1px solid var(--border);
+    font-size: 0.9rem; align-items: center;
+  }
+  .word-row.mastered { opacity: 0.6; }
+  .word-row .status-cell { text-align: center; font-size: 0.85rem; }
+  .word-row .front-cell { font-weight: 600; color: var(--accent); word-break: break-word; }
+  .word-row .back-cell { color: var(--text-secondary); word-break: break-word; }
+  .word-list-summary { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px; }
+  .no-match { text-align: center; color: var(--text-secondary); padding: 20px; }
+
+  @media (max-width: 480px) {
+    .card { min-height: 200px; }
+    .card .term { font-size: 1.4rem; }
+    .card .definition { font-size: 1rem; }
+    .btn { padding: 12px 20px; font-size: 0.9rem; }
+    .actions { gap: 8px; }
+    .word-list-inner { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>👁️ 眼视光光学 · 复习卡片</h1>
+  <p class="subtitle">点击卡片翻转 · 选择「记得」或「忘了」追踪进度 · 键盘快捷键操作</p>
+</div>
+
+<div class="section-pills">
+  <button class="pill active" data-section="all">全部词汇 <span class="count" id="count-all"></span></button>
+  <button class="pill" data-section="en-cn">英译汉 <span class="count" id="count-en-cn"></span></button>
+  <button class="pill" data-section="cn-def">名词解释 <span class="count" id="count-cn-def"></span></button>
+</div>
+
+<div class="stats-bar">
+  <div class="stat remain"><div class="val" id="stat-remain">0</div><div class="lbl">剩余</div></div>
+  <div class="stat mastered"><div class="val" id="stat-mastered">0</div><div class="lbl">已掌握</div></div>
+  <div class="stat review"><div class="val" id="stat-review">0</div><div class="lbl">待复习</div></div>
+</div>
+
+<div class="progress-wrap">
+  <div class="progress-bar" id="progress-bar" style="width:0%"></div>
+</div>
+
+<div class="card-index" id="card-index">准备开始...</div>
+
+<div class="card-container" id="card-container" onclick="flipCard()">
+  <div class="card" id="card">
+    <div class="card-face card-front">
+      <span class="lang-tag" id="front-tag"></span>
+      <div class="term" id="front-text">—</div>
+      <div class="hint">👆 点击翻转查看</div>
+    </div>
+    <div class="card-face card-back">
+      <span class="lang-tag" id="back-tag"></span>
+      <div class="definition" id="back-text">—</div>
+    </div>
+  </div>
+</div>
+
+<div class="actions">
+  <button class="btn btn-back" onclick="goBack()" id="btn-back">⬆ 上一个</button>
+  <button class="btn btn-forgot" onclick="markForgot()" id="btn-forgot">😕 忘了</button>
+  <button class="btn btn-flip" onclick="flipCard()">🔄 翻转</button>
+  <button class="btn btn-remember" onclick="markRemembered()" id="btn-remember">✅ 记得</button>
+</div>
+
+<div class="toolbar">
+  <button class="btn btn-secondary btn-small" onclick="shuffleAll()">🔀 打乱重来</button>
+  <button class="btn btn-secondary btn-small" onclick="reviewForgotten()">📝 复习遗忘词</button>
+  <button class="btn btn-secondary btn-small" onclick="toggleWordList()">📋 词汇表</button>
+  <button class="btn btn-secondary btn-small" onclick="resetAll()">🔄 全部重置</button>
+</div>
+
+<div class="word-list" id="word-list-modal" onclick="if(event.target===this) toggleWordList()">
+  <div class="word-list-inner">
+    <h3>📋 词汇表</h3>
+    <input type="text" class="word-list-search" id="word-list-search" placeholder="🔍 搜索词汇..." autocomplete="off">
+    <div class="word-list-summary" id="word-list-summary"></div>
+    <div class="word-list-header">
+      <span>状态</span>
+      <span>术语</span>
+      <span>释义</span>
+    </div>
+    <div class="word-list-body" id="word-list-body"></div>
+  </div>
+</div>
+
+<script>
+// ── DATA ──
+const ALL_WORDS = [
+  { front: 'V-number', back: '阿贝常数', section: 'en-cn' },
+  { front: 'Airy pattern', back: '艾里斑', section: 'en-cn' },
+  { front: 'superposition principle of wave', back: '波的叠加原理', section: 'en-cn' },
+  { front: 'wavefront aberration', back: '波像差', section: 'en-cn' },
+  { front: 'field curvature', back: '场曲', section: 'en-cn' },
+  { front: 'exit window', back: '出射窗', section: 'en-cn' },
+  { front: 'exit pupil', back: '出射光瞳', section: 'en-cn' },
+  { front: 'low vision', back: '低视力', section: 'en-cn' },
+  { front: 'aqueous humor', back: '房水', section: 'en-cn' },
+  { front: 'magnifier', back: '放大镜', section: 'en-cn' },
+  { front: 'radiometry', back: '辐射度学', section: 'en-cn' },
+  { front: 'conjugation', back: '共轭', section: 'en-cn' },
+  { front: 'conjugate points', back: '共轭点', section: 'en-cn' },
+  { front: 'conjugate distances', back: '共轭距离', section: 'en-cn' },
+  { front: 'optical path length, OPL', back: '光程', section: 'en-cn' },
+  { front: 'optical path difference, OPD', back: '光程差', section: 'en-cn' },
+  { front: 'light scattering', back: '光的散射', section: 'en-cn' },
+  { front: 'diffraction of light', back: '光的衍射', section: 'en-cn' },
+  { front: 'photometry', back: '光度学', section: 'en-cn' },
+  { front: 'diaphragm', back: '光阑', section: 'en-cn' },
+  { front: 'pupil', back: '光瞳', section: 'en-cn' },
+  { front: 'optical axis', back: '光轴', section: 'en-cn' },
+  { front: 'iris', back: '虹膜', section: 'en-cn' },
+  { front: 'back vertex power', back: '后顶点屈光力', section: 'en-cn' },
+  { front: 'back vertex focal length', back: '后顶焦距', section: 'en-cn' },
+  { front: 'posterior focus', back: '后焦点', section: 'en-cn' },
+  { front: 'toricsurface', back: '环曲非球面', section: 'en-cn' },
+  { front: 'toric surface', back: '环曲面', section: 'en-cn' },
+  { front: 'cardinal points', back: '基点', section: 'en-cn' },
+  { front: 'cardinal planes', back: '基面', section: 'en-cn' },
+  { front: 'distortion', back: '畸变', section: 'en-cn' },
+  { front: 'simplified schematic eye', back: '简单模型眼', section: 'en-cn' },
+  { front: 'reduced eye', back: '简化眼', section: 'en-cn' },
+  { front: 'focal plane', back: '焦平面', section: 'en-cn' },
+  { front: 'depth of focus', back: '焦深', section: 'en-cn' },
+  { front: 'cornea', back: '角膜', section: 'en-cn' },
+  { front: 'myopic eye', back: '近视眼', section: 'en-cn' },
+  { front: 'depth of field', back: '景深', section: 'en-cn' },
+  { front: 'aperture stop', back: '孔径光阑', section: 'en-cn' },
+  { front: 'circle of confusion', back: '弥散圈', section: 'en-cn' },
+  { front: 'surface power', back: '面焦度或面屈光力', section: 'en-cn' },
+  { front: 'distance of distinct vision', back: '明视距离', section: 'en-cn' },
+  { front: 'schematic eye', back: '模型眼', section: 'en-cn' },
+  { front: 'eyepiece', back: '目镜', section: 'en-cn' },
+  { front: 'degree of polarization', back: '偏振度', section: 'en-cn' },
+  { front: 'polarimeter', back: '偏振计', section: 'en-cn' },
+  { front: 'plane polarized light', back: '平面偏振光', section: 'en-cn' },
+  { front: 'front vertex power', back: '前顶点屈光力', section: 'en-cn' },
+  { front: 'front vertex focal length', back: '前顶焦距', section: 'en-cn' },
+  { front: 'anterior chamber', back: '前房', section: 'en-cn' },
+  { front: 'depth of the anterior chamber', back: '前房深度', section: 'en-cn' },
+  { front: 'anterior focus', back: '前焦点', section: 'en-cn' },
+  { front: 'spherical aberration', back: '球差', section: 'en-cn' },
+  { front: 'ametropic eye', back: '屈光不正眼', section: 'en-cn' },
+  { front: 'astigmatic eye', back: '散光眼', section: 'en-cn' },
+  { front: 'colorimetry', back: '色度学', section: 'en-cn' },
+  { front: 'real object', back: '实物', section: 'en-cn' },
+  { front: 'real image', back: '实像', section: 'en-cn' },
+  { front: 'Sturm\'s conoid', back: '史氏光锥', section: 'en-cn' },
+  { front: 'visual amplification', back: '视放大率', section: 'en-cn' },
+  { front: 'visual angle', back: '视角', section: 'en-cn' },
+  { front: 'visual acuity', back: '视力', section: 'en-cn' },
+  { front: 'accommodation', back: '调节', section: 'en-cn' },
+  { front: 'near point of accommodation', back: '调节近点', section: 'en-cn' },
+  { front: 'far point of accommodation', back: '调节远点', section: 'en-cn' },
+  { front: 'elliptical polarization light', back: '椭圆偏振光', section: 'en-cn' },
+  { front: 'telescope', back: '望远镜', section: 'en-cn' },
+  { front: 'longitudinal chromatic aberration, LCA', back: '位置色差', section: 'en-cn' },
+  { front: 'object focus', back: '物方焦点', section: 'en-cn' },
+  { front: 'object nodal point', back: '物方节点', section: 'en-cn' },
+  { front: 'object principal point', back: '物方主点', section: 'en-cn' },
+  { front: 'object principal plane', back: '物方主平面', section: 'en-cn' },
+  { front: 'objective', back: '物镜', section: 'en-cn' },
+  { front: 'object space', back: '物空间', section: 'en-cn' },
+  { front: 'microscope', back: '显微镜', section: 'en-cn' },
+  { front: 'linear polarized light', back: '线偏振光', section: 'en-cn' },
+  { front: 'coherent length', back: '相干长度', section: 'en-cn' },
+  { front: 'coherent light', back: '相干光', section: 'en-cn' },
+  { front: 'coherent source', back: '相干光源', section: 'en-cn' },
+  { front: 'aberration', back: '像差', section: 'en-cn' },
+  { front: 'image nodal point', back: '像方节点', section: 'en-cn' },
+  { front: 'image principal point', back: '像方主点', section: 'en-cn' },
+  { front: 'image principal plane', back: '像方主平面', section: 'en-cn' },
+  { front: 'image space', back: '像空间', section: 'en-cn' },
+  { front: 'astigmatism', back: '像散', section: 'en-cn' },
+  { front: 'virtual object', back: '虚物', section: 'en-cn' },
+  { front: 'virtual image', back: '虚像', section: 'en-cn' },
+  { front: 'circular polarization light', back: '圆偏振光', section: 'en-cn' },
+  { front: 'circle', back: '圆形', section: 'en-cn' },
+  { front: 'hyperopic eye', back: '远视眼', section: 'en-cn' },
+  { front: 'emmetropic eye', back: '正视眼', section: 'en-cn' },
+  { front: 'principal ray', back: '主光线', section: 'en-cn' },
+  { front: 'principal plane refraction', back: '主面屈光', section: 'en-cn' },
+  { front: 'spontaneous emission', back: '自发辐射', section: 'en-cn' },
+  { front: 'natural light', back: '自然光', section: 'en-cn' },
+  { front: 'minimum angle of resolution', back: '最小分辨角', section: 'en-cn' },
+  { front: '几何光学', back: '不考虑光与物质的相互作用，撇开光的波动本性，仅以光线为基础，研究光在透明介质中的传播问题的学科。', section: 'cn-def' },
+  { front: '波阵面或波面', back: '对同一个振动源来说，振动同时传播到具有相同相位的点构成的面叫做。离振动源很远的部分波面由于半径非常大可近似视为平面，波面为平面的波称为平面波。', section: 'cn-def' },
+  { front: '波线', back: '在波传播的空间中，波面各点的法线称为波法线或波线。波线代表振动传播的方向和光能量流动的方向。几何光学中的光线指的就是波线。', section: 'cn-def' },
+  { front: '单色光', back: '具有单一波长的光     复色光：多种波长的光混合在一起   （生活中不存在只有一种波长的光，只有相对单色性好的光）', section: 'cn-def' },
+  { front: '光束', back: '是有一定关系的光线的集合体，它代表的是光能量流，光束内的能量既不从光束中流出，也不从外界流入光束。', section: 'cn-def' },
+  { front: '单心光束（同心光束）', back: '由一点发出或会聚到一点的光束称为单心光束。分为发散、会聚、平行光束。', section: 'cn-def' },
+  { front: '像散光束', back: '真实光线或真实光线的延长线无法会聚到一点的光束为像散光束。', section: 'cn-def' },
+  { front: '光束聚散度', back: '光束的会聚或发散程度用光束聚散度定量，其单位为屈光度', section: 'cn-def' },
+  { front: '折射率', back: '反应光学材料使光产生折射能力的一项指标就是折射率，不但与光学材料有关，还与入射光的波长有关，这一点在色散现象中最明显。', section: 'cn-def' },
+  { front: '光的直线传播定律', back: '光在各向同性、均匀的介质中沿直线传播。各向同性、均匀介质是物质性质恒定且各个方向状态相同的介质。', section: 'cn-def' },
+  { front: '光的独立传播定律', back: '来自不同光源（频率、振动方向等不同）、不同方向的光束相遇后各自沿原方向向前且互不影响。', section: 'cn-def' },
+  { front: '光的折射定律', back: '入射光线、法线和折射光线在同一平面，入射光线和折射光线分居在法线两侧，入射角的正弦与反射角的正弦之比等于折射光线一侧介质的折射率与入射光线一侧介质的折射率之比。', section: 'cn-def' },
+  { front: '光的反射定律', back: '入射光线、法线和反射光线在同一平面，入射光线和反射光线分居在发现两侧，入射角等于反射角。', section: 'cn-def' },
+  { front: '光路可逆原理', back: '若光线经A和O后到达B，则通过B和C的光线必经原路线到达A。光的可逆性原理是依据前面三个定律总结出来的，所以说几何光学中光路均是可逆的。', section: 'cn-def' },
+  { front: '光程', back: '在相同时间内，光在真空中传播的距离等于光在某种介质中传播距离与介质折射率的乘积。', section: 'cn-def' },
+  { front: '费马原理', back: '光在给定的两点间传播，光程为极值。换句话说，光沿光程为最大值、最小值或恒定值的路径传播，这是几何光学中最普遍的基本原理，称为费马原理。（光的直线传播就是费马原理的最好例证）', section: 'cn-def' },
+  { front: '实像', back: '真实光线通过光束的“心”所成的像为实像', section: 'cn-def' },
+  { front: '虚像', back: '真实光线无法到达光束的“心”，而是真实光线的延长线通过光束的“心”所称的像', section: 'cn-def' },
+  { front: '实物', back: '对某一光学系统来说，如果入射的同心光束是发散的，则该心就是实物', section: 'cn-def' },
+  { front: '虚物', back: '对某一光学系统来说，如果入射的同心光束是会聚的，则会聚的心就是虚物。', section: 'cn-def' },
+  { front: '物方', back: '对特定的光学系统来说，物点所在的空间叫做物空间，也称物方', section: 'cn-def' },
+  { front: '像方', back: '物点对应的像点所在的空间叫做像空间，也称像方。', section: 'cn-def' },
+  { front: '共轭', back: '在几何光学成像中，对于某一特定的光学系统，一个点物只能成一个点像，我们将物和像这样的一一对应关系成为共轭。根据光的可逆性原理，如果将原来物移至像的位置，则新的像必然落在原来的物的位置上。一对物点和像点称为共轭点（conjugate point），它们相应的物距和像距称为共轭距离（conjugate distances）', section: 'cn-def' },
+  { front: '平面反射成像', back: '像点至镜面的距离l’(像距)与物点至镜面的距离l（物距）相等。-l=l’', section: 'cn-def' },
+  { front: '横向放大率', back: '光学系统的横向放大率为像的大小与物的大小的比值。β=h’/h（h用垂直光轴的距离；若物与像大小相等，则放大率为1）', section: 'cn-def' },
+  { front: '偏向角', back: '三棱镜折射中，出射光线与入射光线的夹角', section: 'cn-def' },
+  { front: '棱镜焦度', back: '三棱镜使光线产生的偏向角称为。用符号P表示。（偏向角的单位有°，rad，棱镜度）', section: 'cn-def' },
+  { front: '棱镜度', back: '100cm处偏离的距离是多少厘米棱镜焦度就是多少棱镜度。', section: 'cn-def' },
+  { front: '焦面', back: '光轴外无限远物体发出的平行光线与光轴所成的夹角很小时，可看作近轴，这样的平行光线也可看成一点像。根据成像作图法画图可以发现这样的像点恰好位于过焦点且垂直于光轴的平面上，由于光轴夹角不同的平行光均成像在该平面上，所以将该平面称为焦面。', section: 'cn-def' },
+  { front: '面屈光力/面角度F', back: '球面对光束聚散程度的改变作用的量（面屈光力代表球面对光线的偏折能力大小）', section: 'cn-def' },
+  { front: '光轴', back: '连接透镜球面曲率中心的直线。', section: 'cn-def' },
+  { front: '透镜', back: '两个共轴折射球面构成的光学系统。', section: 'cn-def' },
+  { front: '凸透镜', back: '中央厚，边缘薄的透镜。   凹透镜：中央薄，边缘厚的透镜。', section: 'cn-def' },
+  { front: '物方主面', back: '通过物方焦点的入射光线与平行于光轴的共轭出射光线相交的点所形成的平面', section: 'cn-def' },
+  { front: '18，像方主面', back: '平行于光轴的入射光线与通过像方焦点的共轭出射光线相交的点所形成的平面', section: 'cn-def' },
+  { front: '节点', back: '当一条与光轴有一定角度的入射光线恰好与其共轭的出射光线相互平行时，入射光线（或延长线）与光轴的交点称为物方节点N，其共轭的出射光线（或延长线）与光轴的交点称为像方节点N‘', section: 'cn-def' },
+  { front: '主点距离', back: '透镜后顶点V‘至像方主点P’的距离V’P’', section: 'cn-def' },
+  { front: '主面间隔t', back: '理想光学系统的组合中，光学系统Ⅰ的像方主点P1’至光学系统Ⅱ的物方主点P2的距离。', section: 'cn-def' },
+  { front: '光学间隔delt（三角形那个）', back: '理想光学系统的组合中，光学系统Ⅰ的像方焦点F1‘至光学系统Ⅱ的物方焦为F2的距离', section: 'cn-def' },
+  { front: '光阑', back: '可以限制成像光束粗细或成像范围大小的通光孔叫做光阑，光阑有两种含义，一是指带通光孔的物体，二是指通光孔本身。', section: 'cn-def' },
+  { front: '孔径光阑', back: '光学系统中的多个光阑中对成像光束限制程度最大的光阑叫做孔径光阑。', section: 'cn-def' },
+  { front: '入射光瞳', back: '孔径光瞳经它前面光学系统所成的像称为入射光瞳。如果孔径光阑前面无透镜，则孔径光阑本身就是入射光瞳。', section: 'cn-def' },
+  { front: '出射光瞳', back: '孔径光瞳经它后面光学系统所成的像称为出射光瞳。如果孔径光阑后面无透镜，则孔径光阑本身就是出射光瞳。', section: 'cn-def' },
+  { front: '主光线', back: '光轴外的物点发出的通过入射光瞳中心的光线叫做主光线。', section: 'cn-def' },
+  { front: '视场光阑', back: '在光学系统中，起限制成像范围的光阑。', section: 'cn-def' },
+  { front: '渐晕', back: '轴外物点发出的光束被光学系统所限制，而使像的亮度减弱的现象叫做渐晕。', section: 'cn-def' },
+  { front: '景深', back: '不改变接光屏的位置，将物点移近透镜，则在屏幕上可以成一个小光斑，当光斑足够小时，我们并不能分辨出点与小光斑的区别，认为两者的清晰度是相同的。再将物点移远透镜，也会产生相同的现象。我们将像平面上获得“同等”清晰像的物空间范围叫做景深。', section: 'cn-def' },
+  { front: '焦深', back: '在上面例子中，如果将物点位置固定，而将接像屏幕在像平面前后移动，同样会就接受到大小不同的小光斑，同样也存在一个不能区分出点与小光斑的空间范围，我们将该像空间范围叫做焦深。', section: 'cn-def' },
+  { front: '前房深度', back: '为光轴上角膜后顶点至晶状体前面顶点之间的距离。但有时前房深度也包括角膜的厚度。不包括角膜厚度的前房深度大约为3.1mm。', section: 'cn-def' },
+  { front: '模型眼', back: '是一个根据人眼的平均尺寸，用各种曲律半径的球面代表眼球光学系统的共轴球面光学系统模型。', section: 'cn-def' },
+  { front: '简化眼', back: '是一种更简单的眼球光学系统的模型，它的特点是将眼简化为一个单球面折射的光学系统。', section: 'cn-def' },
+  { front: '调节', back: '中视光学中将眼改变焦度（屈光力）的功能叫做调节。', section: 'cn-def' },
+  { front: '静态屈光', back: '无调节时，眼的屈光状态称为静态屈光', section: 'cn-def' },
+  { front: '动态屈光', back: '调节时，眼的屈光状态称为动态屈光', section: 'cn-def' },
+  { front: '正式眼', back: '无调节时，无限远的物点与视网膜共轭的眼称为正视眼。也就是说，平行光（物点在眼前无限远处）经眼的屈光系统后焦点落在视网膜上。', section: 'cn-def' },
+  { front: '屈光不正（非正视眼）', back: '无调节时，无限远的物点不与视网膜共轭（平行光的焦点不能落在视网膜上）或平行光经眼的屈光系统后不能形成焦点的眼称为非正视眼或屈光不正。屈光不正包括近视眼、远视眼和散光。', section: 'cn-def' },
+  { front: '近视眼', back: '无调节时，平行光经屈光系统后，焦点落在视网膜前的眼称为近视眼', section: 'cn-def' },
+  { front: '远视眼', back: '无调节时，平行光经屈光系统后，焦点落在视网膜后的眼称为远视眼', section: 'cn-def' },
+  { front: '散光眼', back: '无调节时，平行光经眼屈光系统后，无法形成焦点的眼称为散光眼', section: 'cn-def' },
+  { front: '调节远点', back: '充分放松调节时，与视网膜共轭的物点位置称为调节远点，简称远点。', section: 'cn-def' },
+  { front: '调节近点', back: '充分使用调节时，与视网膜共轭的物点称为调节近点，简称近点。人眼的近点由眼的屈光状态和眼的调节能力所决定（也就是远点位置）。', section: 'cn-def' },
+  { front: '明视距离', back: '可以舒适阅读的距离称为明视距离。无老花的正视眼一般取离眼25cm为明视距离。', section: 'cn-def' },
+  { front: '调节范围', back: '调节远点至调节近点之间的距离。', section: 'cn-def' },
+  { front: '调节量', back: '当注视眼前调节范围内目标时，由于调节，眼的总焦度增加，增加到量即为调节量。', section: 'cn-def' },
+  { front: '调节幅度', back: '眼使用最大调节时眼的焦度（屈光力）和无调节时眼的焦度之差称为调剂幅度。', section: 'cn-def' },
+  { front: '调节滞后', back: '点物成点像于视网膜上时所需的调节量与眼实际使用调节量的差值叫做调节滞后。二者差值为正叫做正调节滞后（调节滞后），差值为负叫负调节滞后（调节超前）', section: 'cn-def' },
+  { front: '双眼视差', back: '是由于双眼从两个不同的角度观察外界景物，使双眼的视网膜成的像位置略有不同而造成的。（我们定义外界两物点A、B在两眼视网膜上相应的像点的距离差，即称为双眼视差或视差，若AL与AR为对应点，则BL与BR必不是对应点）', section: 'cn-def' },
+  { front: '光的干涉', back: '具有一定条件的多束光在重叠区的光强呈现出不随时间而变的强弱交替的光强分布现象叫做光的干涉现象。', section: 'cn-def' },
+  { front: '半波损失', back: '光在被反射过程中，如果反射光在离开反射点时的振动方向对入射光到达入射点时的振动方向恰好相反，这种现象叫做半波损失。', section: 'cn-def' },
+  { front: '光的衍射', back: '光在传播路径中，遇到障碍物时，绕过障碍物传播的现象称为光的衍射。', section: 'cn-def' },
+  { front: '爱里斑', back: '.衍射图样中央是个明亮的圆斑，称为爱里斑，外围是一组同心的暗环和明环', section: 'cn-def' },
+  { front: '瑞利判据', back: '一个发光物点的爱里斑中心恰好与另一发光物点衍射图样的第一个暗纹重合时，即两爱里斑中心距离为爱里斑的半径时，这两个发光物点刚好能被分辨。', section: 'cn-def' },
+  { front: '偏振', back: '振动方向对于传播方向的不对称性叫做偏振，它是横波区别于其他纵波的一个最明显的标志，只有横波才有偏振现象。', section: 'cn-def' },
+  { front: '自然光', back: '大量的、平均振幅相同、振动方向任意、彼此没有固定相位关系的光振动的组合称为自然光（natural light），自然光也称为非偏振光。', section: 'cn-def' },
+  { front: '光的偏振', back: '光波中的电振动矢量E和磁振动矢量H都与速度v垂直，因此光波是横波，它具有偏振性称为光的偏振。', section: 'cn-def' },
+  { front: '光的散射', back: '光通过不均匀媒质时，部分光偏离原来方向的传播方向，而向多个方向传播的现象叫做光的散射。', section: 'cn-def' },
+  { front: '10瑞利散射', back: '当入射光通过的光学介质中所含分子微粒尺度小于光的波长时，由于构成该介质的分子密度涨落而被散射的现象通常称为瑞利散射。', section: 'cn-def' },
+  { front: '视放大率', back: '使用视光学仪器后人眼视网膜光学像大小与人眼直接观察物体的视网膜像大小之比称为视放大率。', section: 'cn-def' },
+  { front: '视度调节', back: '为使近视眼和远视眼也能像正视眼那样不用调节即可使视网膜像清晰，便于舒适地观察，就需要通过移动目镜来改变目视光学仪器的成像位置，从而使近视眼和远视眼也能在不调节时，视网膜像时清晰的，这一做法称为视度调节。', section: 'cn-def' }
+];
+
+// ── STATE ──
+let currentSection = 'all';
+let words = [...ALL_WORDS];
+let queue = [];
+let mastered = new Set();
+let forgotten = new Set();
+let currentIdx = -1;
+let currentWordIdx = -1;
+let isFlipped = false;
+let animating = false;
+let historyStack = [];
+
+// ── DOM refs ──
+const cardContainer = document.getElementById('card-container');
+const cardEl = document.getElementById('card');
+const frontText = document.getElementById('front-text');
+const backText = document.getElementById('back-text');
+const frontTag = document.getElementById('front-tag');
+const backTag = document.getElementById('back-tag');
+const cardIndex = document.getElementById('card-index');
+const progressBar = document.getElementById('progress-bar');
+const statRemain = document.getElementById('stat-remain');
+const statMastered = document.getElementById('stat-mastered');
+const statReview = document.getElementById('stat-review');
+const wordListModal = document.getElementById('word-list-modal');
+const wordListBody = document.getElementById('word-list-body');
+const wordListSearch = document.getElementById('word-list-search');
+const wordListSummary = document.getElementById('word-list-summary');
+const btnForgot = document.getElementById('btn-forgot');
+const btnRemember = document.getElementById('btn-remember');
+const btnBack = document.getElementById('btn-back');
+
+// ── Section counts ──
+document.getElementById('count-all').textContent = '(' + ALL_WORDS.length + ')';
+document.getElementById('count-en-cn').textContent = '(' + ALL_WORDS.filter(w => w.section === 'en-cn').length + ')';
+document.getElementById('count-cn-def').textContent = '(' + ALL_WORDS.filter(w => w.section === 'cn-def').length + ')';
+
+function getFilteredWords() {
+  if (currentSection === 'all') return [...ALL_WORDS];
+  return ALL_WORDS.filter(w => w.section === currentSection);
+}
+
+function buildQueue() {
+  queue = words.map(function(_, i) { return i; });
+  shuffle(queue);
+  currentIdx = 0;
+  currentWordIdx = queue.length > 0 ? queue[0] : -1;
+  isFlipped = false;
+  animating = false;
+  historyStack = [];
+  cardEl.classList.remove('flipped');
+  updateCard();
+  updateStats();
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+}
+
+function updateCard() {
+  if (currentWordIdx === -1 || queue.length === 0 || currentIdx >= queue.length) {
+    frontText.textContent = '\u{1f389}';
+    backText.textContent = '全部复习完毕！';
+    frontTag.textContent = '';
+    backTag.textContent = '';
+    cardIndex.textContent = '已完成';
+    btnForgot.disabled = true;
+    btnRemember.disabled = true;
+    btnBack.disabled = true;
+    progressBar.style.width = '100%';
+    statRemain.textContent = '0';
+    return;
+  }
+  btnForgot.disabled = false;
+  btnRemember.disabled = false;
+  btnBack.disabled = historyStack.length === 0;
+  const w = words[currentWordIdx];
+  frontText.textContent = w.front;
+  backText.textContent = w.back;
+
+  if (w.section === 'en-cn') {
+    frontTag.textContent = 'English';
+    backTag.textContent = '中文';
+  } else {
+    frontTag.textContent = '术语';
+    backTag.textContent = '释义';
+  }
+
+  cardIndex.textContent = '第 ' + (currentIdx + 1) + ' / ' + queue.length + ' 个';
+  updateStats();
+}
+
+function flipCard() {
+  if (queue.length === 0 || currentWordIdx === -1) return;
+  if (animating) return;
+  isFlipped = !isFlipped;
+  cardEl.classList.toggle('flipped', isFlipped);
+}
+
+function markRemembered() {
+  if (queue.length === 0 || currentWordIdx === -1 || animating) return;
+  historyStack.push({ idx: currentIdx, wordIdx: currentWordIdx, qlen: queue.length, wasMastered: mastered.has(currentWordIdx), wasForgotten: forgotten.has(currentWordIdx) });
+  mastered.add(currentWordIdx);
+  forgotten.delete(currentWordIdx);
+  advanceCard();
+}
+
+function markForgot() {
+  if (queue.length === 0 || currentWordIdx === -1 || animating) return;
+  historyStack.push({ idx: currentIdx, wordIdx: currentWordIdx, qlen: queue.length, wasMastered: mastered.has(currentWordIdx), wasForgotten: forgotten.has(currentWordIdx) });
+  mastered.delete(currentWordIdx);
+  forgotten.add(currentWordIdx);
+  queue.push(currentWordIdx);
+  advanceCard();
+}
+
+function goBack() {
+  if (historyStack.length === 0 || animating) return;
+  var last = historyStack.pop();
+  forgotten.delete(last.wordIdx);
+  mastered.delete(last.wordIdx);
+  if (last.wasMastered) mastered.add(last.wordIdx);
+  if (last.wasForgotten) forgotten.add(last.wordIdx);
+
+  if (queue.length > last.qlen) {
+    queue.splice(last.qlen, 1);
+  }
+  currentIdx = last.idx;
+  currentWordIdx = last.wordIdx;
+  isFlipped = false;
+  cardEl.classList.remove('flipped');
+  updateCard();
+  updateStats();
+}
+
+function advanceCard() {
+  var wasFlipped = isFlipped;
+  currentIdx++;
+
+  if (currentIdx >= queue.length) {
+    if (forgotten.size > 0) {
+      queue = Array.from(forgotten);
+      shuffle(queue);
+      forgotten.clear();
+      currentIdx = 0;
+    } else if (mastered.size >= words.length) {
+      currentWordIdx = -1;
+      queue = [];
+      currentIdx = -1;
+    } else {
+      var unmastered = words.map(function(_, i) { return i; }).filter(function(i) { return !mastered.has(i); });
+      if (unmastered.length === 0) {
+        currentWordIdx = -1;
+        queue = [];
+        currentIdx = -1;
+      } else {
+        queue = unmastered;
+        shuffle(queue);
+        currentIdx = 0;
+      }
+    }
+  }
+
+  isFlipped = false;
+  cardEl.classList.remove('flipped');
+  var scheduledIdx = currentIdx;
+
+  if (wasFlipped) {
+    animating = true;
+    btnForgot.disabled = true;
+    btnRemember.disabled = true;
+    btnBack.disabled = true;
+    setTimeout(function() {
+      animating = false;
+      if (currentIdx === scheduledIdx) {
+        currentWordIdx = queue.length > 0 && currentIdx < queue.length ? queue[currentIdx] : -1;
+        updateCard();
+      }
+    }, 500);
+  } else {
+    currentWordIdx = queue.length > 0 && currentIdx < queue.length ? queue[currentIdx] : -1;
+    updateCard();
+  }
+}
+
+function updateStats() {
+  var remain = queue.length > 0 && currentIdx < queue.length ? queue.length - currentIdx : 0;
+  statRemain.textContent = remain;
+  statMastered.textContent = mastered.size;
+  statReview.textContent = forgotten.size;
+  var total = words.length;
+  var done = total > 0 ? mastered.size : 0;
+  progressBar.style.width = total > 0 ? Math.round((done / total) * 100) + '%' : '0%';
+}
+
+function shuffleAll() {
+  words = getFilteredWords();
+  mastered.clear();
+  forgotten.clear();
+  buildQueue();
+}
+
+function reviewForgotten() {
+  if (animating) return;
+  if (forgotten.size === 0) {
+    var candidates = words.map(function(_, i) { return i; }).filter(function(i) { return !mastered.has(i); });
+    if (candidates.length === 0) {
+      alert('所有词汇都已掌握！');
+      return;
+    }
+    queue = candidates;
+    shuffle(queue);
+  } else {
+    queue = Array.from(forgotten);
+    shuffle(queue);
+    forgotten.clear();
+  }
+  currentIdx = 0;
+  currentWordIdx = queue[0];
+  isFlipped = false;
+  cardEl.classList.remove('flipped');
+  updateCard();
+}
+
+function resetAll() {
+  if (animating) return;
+  words = getFilteredWords();
+  mastered.clear();
+  forgotten.clear();
+  buildQueue();
+}
+
+// ── Word list with search ──
+function renderWordList() {
+  var filtered = getFilteredWords();
+  var searchTerm = wordListSearch.value.toLowerCase().trim();
+
+  var summary = '共 ' + filtered.length + ' 个';
+  if (searchTerm) {
+    var matched = filtered.filter(function(w) {
+      return w.front.toLowerCase().includes(searchTerm) || w.back.toLowerCase().includes(searchTerm);
+    });
+    summary += ' · 搜索到 ' + matched.length + ' 个';
+  }
+  wordListSummary.textContent = summary;
+
+  var html = '';
+  var count = 0;
+  filtered.forEach(function(w, i) {
+    if (searchTerm) {
+      if (!w.front.toLowerCase().includes(searchTerm) && !w.back.toLowerCase().includes(searchTerm)) return;
+    }
+    count++;
+    var statusIcon = '○';
+    var statusClass = '';
+    if (mastered.has(i)) {
+      statusIcon = '✅';
+      statusClass = ' mastered';
+    } else if (forgotten.has(i)) {
+      statusIcon = '🔄';
+    }
+    html += '<div class="word-row' + statusClass + '">';
+    html += '<span class="status-cell">' + statusIcon + '</span>';
+    html += '<span class="front-cell">' + w.front + '</span>';
+    html += '<span class="back-cell">' + w.back + '</span>';
+    html += '</div>';
+  });
+
+  if (count === 0) {
+    html = '<div class="no-match">未找到匹配词汇</div>';
+  }
+  wordListBody.innerHTML = html;
+}
+
+function toggleWordList() {
+  var isOpen = wordListModal.classList.contains('open');
+  if (isOpen) {
+    wordListModal.classList.remove('open');
+  } else {
+    wordListSearch.value = '';
+    renderWordList();
+    wordListModal.classList.add('open');
+    setTimeout(function() { wordListSearch.focus(); }, 100);
+  }
+}
+
+wordListSearch.addEventListener('input', function() {
+  renderWordList();
+});
+
+// ── Section switch ──
+document.querySelectorAll('.pill').forEach(function(pill) {
+  pill.addEventListener('click', function() {
+    if (animating) return;
+    document.querySelectorAll('.pill').forEach(function(p) { p.classList.remove('active'); });
+    pill.classList.add('active');
+    currentSection = pill.dataset.section;
+    resetAll();
+  });
+});
+
+// ── Keyboard shortcuts ──
+document.addEventListener('keydown', function(e) {
+  if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return;
+  if (animating) return;
+  switch (e.key) {
+    case ' ': case 'Enter':
+      e.preventDefault();
+      flipCard();
+      break;
+    case 'ArrowLeft':
+      markForgot();
+      break;
+    case 'ArrowRight':
+      markRemembered();
+      break;
+    case 'ArrowUp':
+      goBack();
+      break;
+    case 'r':
+      resetAll();
+      break;
+    case 'f':
+      reviewForgotten();
+      break;
+  }
+});
+
+// ── Init ──
+words = getFilteredWords();
+buildQueue();
+</script>
+</body>
+</html>

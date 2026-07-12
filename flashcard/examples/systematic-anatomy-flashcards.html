@@ -1,0 +1,651 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>系统解剖学 · 名词解释复习卡片</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --card-bg: #1e293b;
+    --card-front: #1e293b;
+    --card-back: #1e293b;
+    --text: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --accent: #38bdf8;
+    --accent-dim: #0c4a6e;
+    --correct: #34d399;
+    --correct-dim: #064e3b;
+    --wrong: #f87171;
+    --wrong-dim: #450a0a;
+    --border: #334155;
+    --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+  }
+
+  .header { text-align: center; margin-bottom: 24px; }
+  .header h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), #818cf8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .header .subtitle {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-top: 4px;
+  }
+
+  .stats-bar {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+  .stat {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 20px;
+    text-align: center;
+    min-width: 80px;
+  }
+  .stat .val { font-size: 1.4rem; font-weight: 700; }
+  .stat .lbl { font-size: 0.75rem; color: var(--text-secondary); }
+  .stat.remain .val { color: var(--accent); }
+  .stat.mastered .val { color: var(--correct); }
+  .stat.review .val { color: #fbbf24; }
+
+  .card-container {
+    perspective: 1000px;
+    width: 100%;
+    max-width: 600px;
+    margin-bottom: 20px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .card {
+    position: relative;
+    width: 100%;
+    min-height: 300px;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-style: preserve-3d;
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+  }
+  .card.flipped { transform: rotateY(180deg); }
+
+  .card-face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 30px;
+    border: 1px solid var(--border);
+  }
+  .card-front { background: var(--card-bg); }
+  .card-back {
+    background: var(--card-bg);
+    transform: rotateY(180deg);
+  }
+
+  .card .term {
+    font-size: 1.7rem;
+    font-weight: 800;
+    text-align: center;
+    letter-spacing: 0.02em;
+    word-break: break-word;
+  }
+  .card .hint {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 12px;
+  }
+  .card .definition {
+    font-size: 1.02rem;
+    line-height: 1.8;
+    text-align: left;
+    color: #cbd5e1;
+    word-break: break-word;
+  }
+  .card .lang-tag {
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .card-index {
+    margin-bottom: 12px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+  }
+
+  .actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 24px;
+  }
+  .btn {
+    border: none;
+    border-radius: 12px;
+    padding: 14px 28px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .btn:active { transform: scale(0.96); }
+
+  .btn-forgot { background: var(--wrong-dim); color: var(--wrong); border: 1px solid #7f1d1d; }
+  .btn-forgot:hover { background: #7f1d1d; }
+  .btn-remember { background: var(--correct-dim); color: var(--correct); border: 1px solid #065f46; }
+  .btn-remember:hover { background: #065f46; }
+  .btn-flip { background: var(--accent-dim); color: var(--accent); border: 1px solid #0e7490; }
+  .btn-flip:hover { background: #0e7490; }
+  .btn-secondary { background: var(--card-bg); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { background: var(--border); }
+  .btn-small { padding: 8px 16px; font-size: 0.85rem; border-radius: 8px; }
+
+  .progress-wrap {
+    width: 100%;
+    max-width: 600px;
+    background: var(--border);
+    border-radius: 10px;
+    height: 8px;
+    margin-bottom: 28px;
+    overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%;
+    border-radius: 10px;
+    background: linear-gradient(90deg, var(--accent), #818cf8);
+    transition: width 0.4s ease;
+  }
+
+  .toolbar {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 10px;
+  }
+
+  .word-list {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .word-list.open { display: flex; }
+  .word-list-inner {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    max-width: 720px;
+    width: 90%;
+    max-height: 75vh;
+    overflow-y: auto;
+  }
+  .word-list-inner h3 { margin-bottom: 16px; }
+  .word-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.9rem;
+    gap: 16px;
+  }
+  .word-row .en { font-weight: 600; color: var(--accent); min-width: 100px; flex-shrink: 0; }
+  .word-row .cn { color: var(--text-secondary); text-align: left; }
+
+  .section-pills {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 16px;
+  }
+  .pill {
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-secondary);
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .pill.active { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
+
+  @media (max-width: 480px) {
+    .card { min-height: 220px; }
+    .card .term { font-size: 1.4rem; }
+    .card .definition { font-size: 0.92rem; }
+    .btn { padding: 12px 20px; font-size: 0.9rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📚 系统解剖学 · 名词解释</h1>
+  <p class="subtitle">共 64 个名词 · 点击卡片翻转 · 记得/忘了追踪进度</p>
+</div>
+
+<div class="section-pills">
+  <button class="pill active" data-section="all">全部词汇 (64)</button>
+  <button class="pill" data-section="bone">骨关节 (5)</button>
+  <button class="pill" data-section="muscle">肌与筋膜 (3)</button>
+  <button class="pill" data-section="viscera">内脏学 (18)</button>
+  <button class="pill" data-section="heart">心血管 (14)</button>
+  <button class="pill" data-section="nerve">神经感觉 (22)</button>
+  <button class="pill" data-section="other">其他 (2)</button>
+</div>
+
+<div class="stats-bar">
+  <div class="stat remain"><div class="val" id="stat-remain">0</div><div class="lbl">剩余</div></div>
+  <div class="stat mastered"><div class="val" id="stat-mastered">0</div><div class="lbl">已掌握</div></div>
+  <div class="stat review"><div class="val" id="stat-review">0</div><div class="lbl">待复习</div></div>
+</div>
+
+<div class="progress-wrap">
+  <div class="progress-bar" id="progress-bar" style="width:0%"></div>
+</div>
+
+<div class="card-index" id="card-index">第 1 个</div>
+
+<div class="card-container" id="card-container" onclick="flipCard()">
+  <div class="card" id="card">
+    <div class="card-face card-front">
+      <span class="lang-tag" id="front-tag">术语</span>
+      <div class="term" id="front-text">—</div>
+      <div class="hint">👆 点击翻转查看释义</div>
+    </div>
+    <div class="card-face card-back">
+      <span class="lang-tag" id="back-tag">释义</span>
+      <div class="definition" id="back-text">—</div>
+    </div>
+  </div>
+</div>
+
+<div class="actions">
+  <button class="btn btn-forgot" onclick="markForgot()" id="btn-forgot">😕 忘了</button>
+  <button class="btn btn-flip" onclick="flipCard()">🔄 翻转</button>
+  <button class="btn btn-remember" onclick="markRemembered()" id="btn-remember">✅ 记得</button>
+</div>
+
+<div class="toolbar">
+  <button class="btn btn-secondary btn-small" onclick="shuffleAll()">🔀 打乱重来</button>
+  <button class="btn btn-secondary btn-small" onclick="reviewForgotten()">📝 复习遗忘词</button>
+  <button class="btn btn-secondary btn-small" onclick="toggleWordList()">📋 词汇表</button>
+  <button class="btn btn-secondary btn-small" onclick="resetAll()">🔄 全部重置</button>
+</div>
+
+<div class="word-list" id="word-list-modal" onclick="if(event.target===this) toggleWordList()">
+  <div class="word-list-inner" id="word-list-inner"></div>
+</div>
+
+<script>
+// ── ALL WORDS ──
+const ALL_WORDS = [
+  // ===== 骨与关节 (1-5) =====
+  { front: "胸骨角", back: "胸骨柄和胸骨体连接处微向前突，可在体表扪及，两侧平对第2肋，是计数肋的重要标志。", section: "bone" },
+  { front: "翼点", back: "颞窝前下部骨质较薄，在额、顶、颞、蝶骨汇合处最为薄弱，构成「H」形的缝，其内面有脑膜中动脉前支通过，易损伤。", section: "bone" },
+  { front: "桡神经沟", back: "位于肱骨体后面中部，自内上斜向外下的浅沟，内有桡神经和肱深动脉经过，肱骨中部骨折易伤及桡神经。", section: "bone" },
+  { front: "椎间盘", back: "连结相邻椎体的纤维软骨盘，中央为髓核，周围为纤维环，有弹性，具连接和缓冲作用。", section: "bone" },
+  { front: "黄韧带", back: "连结相邻椎弓板间的韧带，有限制脊柱过度前屈的作用。", section: "bone" },
+
+  // ===== 肌与筋膜 (6-7,24) =====
+  { front: "腹股沟韧带", back: "位于髂前上棘与耻骨结节之间，由腹外斜肌腱膜的下缘卷曲增厚形成。", section: "muscle" },
+  { front: "乳房悬韧带（Cooper韧带）", back: "连于乳房皮肤与胸筋膜之间的纤维束，对乳房起支持和固定作用，乳腺癌早期可侵及此韧带使其缩短，导致皮肤出现橘皮样变。", section: "muscle" },
+  { front: "十二指肠悬韧带（Treitz韧带）", back: "由十二指肠悬肌及其表面腹膜共同构成，是确定空肠起始的重要标志。", section: "muscle" },
+
+  // ===== 内脏学 (7-25) =====
+  { front: "咽峡", back: "由腭垂、腭帆游离缘、两侧腭舌弓及舌根共同围成，为口腔与咽的分界。", section: "viscera" },
+  { front: "咽淋巴环", back: "由咽扁桃体、腭扁桃体、咽鼓管扁桃体、舌扁桃体共同构成，对消化道和呼吸道有防御功能。", section: "viscera" },
+  { front: "舌乳头", back: "舌背黏膜上的小突起，包括丝状乳头、菌状乳头、轮廓乳头和叶状乳头。", section: "viscera" },
+  { front: "胆囊三角（Calot三角）", back: "由胆囊管、肝总管和肝的脏面围成的三角形区域，内有胆囊动脉通过，是临床寻找胆囊动脉的重要标志。", section: "viscera" },
+  { front: "肝胰壶腹（Vater壶腹）", back: "胆总管与胰管汇合形成一略膨大的共同管道。", section: "viscera" },
+  { front: "肝胰壶腹括约肌（Oddi括约肌）", back: "肝胰壶腹周围的平滑肌，胆总管及胰管末段的平滑肌与其合称Oddi括约肌。", section: "viscera" },
+  { front: "麦氏点（McBurney点）", back: "脐与右髂前上棘连线的中、外1/3交点处，是阑尾根部的体表投影点。", section: "viscera" },
+  { front: "肺门", back: "肺的内侧面中部偏后有一长椭圆形凹陷，是支气管、肺动脉、肺静脉、淋巴管和神经等进出肺之处。", section: "viscera" },
+  { front: "肋膈隐窝", back: "肋胸膜与膈胸膜转折处，呈半环形，是胸膜腔的最低点，胸膜腔积液首先聚集于此。", section: "viscera" },
+  { front: "肺根", back: "出入肺门的支气管、肺动脉、肺静脉、神经和淋巴被结缔组织包裹称为肺根。", section: "viscera" },
+  { front: "纵隔", back: "两侧纵隔胸膜间全部器官、结构和结缔组织的总称。", section: "viscera" },
+  { front: "肾门", back: "肾的内侧面中部凹陷，为肾动脉、肾静脉、神经、淋巴管及肾盂出入之处。", section: "viscera" },
+  { front: "肾蒂", back: "出入肾门的肾血管、淋巴管、神经、肾盂和结缔组织的总称，主要结构由前向后依次为肾静脉、肾动脉和肾盂末端；从上向下依次为肾动脉、肾静脉和肾盂，右侧肾蒂较左侧短。", section: "viscera" },
+  { front: "肾区", back: "位于腰背部，竖脊肌的外侧缘与第12肋的夹角处，叩击或触压此区可引起疼痛。", section: "viscera" },
+  { front: "膀胱三角", back: "在膀胱底的内面，位于两侧输尿管口与尿道内口之间的三角形区域，黏膜与肌层紧密相连，缺少黏膜下层，是膀胱结核和肿瘤的好发部位。", section: "viscera" },
+  { front: "网膜囊", back: "位于小网膜、胃后壁与腹后壁腹膜之间的不规则潜在腔隙，属腹膜腔的一部分，又称小腹膜腔，借网膜孔与腹腔相通。", section: "viscera" },
+  { front: "直肠子宫陷凹（Douglas腔）", back: "腹膜在直肠与子宫之间移行返折而形成的陷凹，是腹膜腔的最低部位，积液多聚存于此。", section: "viscera" },
+
+  // ===== 心血管 (26-37) =====
+  { front: "三尖瓣复合体", back: "由三尖瓣环、三尖瓣、腱索和乳头肌组成，在功能和结构上是一个整体，保证右心室血液单向流动。", section: "heart" },
+  { front: "二尖瓣复合体", back: "由二尖瓣环、二尖瓣、腱索和乳头肌组成，使左心室收缩时血液不会逆流入左心房。", section: "heart" },
+  { front: "动脉韧带", back: "连于肺动脉干分叉处稍左侧至主动脉弓下缘的纤维性结缔组织索，是胚胎时期动脉导管闭锁的遗迹。", section: "heart" },
+  { front: "颈动脉窦", back: "颈总动脉末端与颈内动脉起始部的膨大部分，窦壁外膜内含丰富的游离神经末梢称压力感受器，可反射性调节血压。", section: "heart" },
+  { front: "静脉角", back: "同侧的颈内静脉和锁骨下静脉在胸锁关节后方汇合而成头臂静脉，汇合处的夹角称静脉角，左侧有胸导管注入，右侧有右淋巴导管注入。", section: "heart" },
+  { front: "乳糜池", back: "胸导管起始端的梭形膨大，平第10胸椎下缘高度，接受左、右腰干和肠干的淋巴回流。", section: "heart" },
+  { front: "卵圆窝", back: "位于房间隔右侧面的卵圆形凹陷，为胚胎时期卵圆孔闭合后的遗迹，是房间隔缺损的好发部位。", section: "heart" },
+  { front: "冠状窦", back: "位于左心房与左心室之间的冠状沟内，收集心大、心中、心小静脉，经冠状窦口注入右心房。", section: "heart" },
+  { front: "掌浅弓", back: "位于掌腱膜深面，由尺动脉末端与桡动脉掌浅支吻合而成。", section: "heart" },
+  { front: "掌深弓", back: "位于屈指肌腱深面，由桡动脉末端与尺动脉掌深支吻合而成。", section: "heart" },
+  { front: "腹腔干", back: "由腹主动脉发出的粗短动脉干，分为胃左动脉、肝总动脉和脾动脉。", section: "heart" },
+  { front: "肝固有动脉", back: "发自肝总动脉，行于肝十二指肠韧带内，经肝门入肝。", section: "heart" },
+
+  // ===== 神经与感觉 (38-63) =====
+  { front: "视神经盘", back: "位于视网膜后部，直径约1.5mm的白色小区，内有视神经、视网膜中央动脉和静脉穿过，无感光细胞，又称生理性盲点。", section: "nerve" },
+  { front: "黄斑", back: "位于视神经盘颞侧约3.5mm处，由密集的视锥细胞构成的黄色小区，中央凹陷称中央凹，为感光最敏锐处。", section: "nerve" },
+  { front: "壶腹嵴", back: "位于膜壶腹内，由增厚的结缔组织和特殊的感觉上皮组成，是位觉感受器，感受头部旋转变速运动的刺激。", section: "nerve" },
+  { front: "灰质", back: "在中枢神经系统内，神经元胞体和树突聚集的部位，新鲜标本中因富含血管而色泽灰暗。", section: "nerve" },
+  { front: "白质", back: "在中枢神经系统内，神经纤维聚集的部位，因髓鞘色泽白亮。", section: "nerve" },
+  { front: "神经核", back: "在中枢神经系统内，由神经元胞体聚集而成的团块。", section: "nerve" },
+  { front: "神经节", back: "在周围神经系统内，由神经元胞体聚集而成的团块。", section: "nerve" },
+  { front: "纤维束", back: "在中枢神经系统内，起止、行程和功能相同的神经纤维集合在一起。", section: "nerve" },
+  { front: "菱形窝", back: "位于延髓和脑桥背面，呈菱形，由中央管敞开而成，构成第四脑室底。", section: "nerve" },
+  { front: "内侧丘系交叉", back: "薄束核和楔束核发出的纤维在延髓交叉至对侧，交叉后的纤维上行成为内侧丘系。", section: "nerve" },
+  { front: "锥体束", back: "由大脑皮质中央前回及中央旁小叶前部细胞发出的轴突组成，包括皮质脊髓束和皮质核束，支配全身骨骼肌运动。", section: "nerve" },
+  { front: "第三脑室", back: "位于丘脑和下丘脑间，为矢状位狭窄间隙，内含脑脊液，与侧脑室和第四脑室相通。", section: "nerve" },
+  { front: "第四脑室", back: "位于延髓、脑桥和小脑之间，呈四棱锥体形，内含脑脊液，与第三脑室、蛛网膜下隙及脊髓中央管相通。", section: "nerve" },
+  { front: "外侧膝状体", back: "位于丘脑后方，接受视束的纤维，传导视觉。", section: "nerve" },
+  { front: "内侧膝状体", back: "位于丘脑后方，接受下丘臂的纤维，传导听觉。", section: "nerve" },
+  { front: "胼胝体", back: "连合左、右大脑半球新皮质的纤维，广泛联系额、顶、枕、颞叶，分为嘴、膝、干和压部。", section: "nerve" },
+  { front: "海绵窦", back: "位于颅中窝蝶骨体两侧的硬脑膜窦，窦内纤维交织成网状，内有颈内动脉和展神经通过，外侧壁有动眼神经、滑车神经、眼神经和上颌神经通过。", section: "nerve" },
+  { front: "锥体系", back: "由躯体运动中枢的锥体细胞组成，其轴突构成锥体束，包括皮质核束和皮质脊髓束。", section: "nerve" },
+  { front: "锥体外系", back: "锥体系以外所有影响和控制躯体运动的结构，主要功能是调节肌肉张力、协调肌肉活动、维持身体平衡。", section: "nerve" },
+  { front: "硬膜外隙", back: "位于硬脊膜与椎管壁之间，呈负压，有脊神经根通过，临床常进行硬膜外麻醉。", section: "nerve" },
+  { front: "蛛网膜下隙", back: "位于蛛网膜与软膜之间，内含脑脊液，临床常进行腰椎穿刺进入此隙抽取脑脊液或麻醉。", section: "nerve" },
+  { front: "硬脑膜窦", back: "由硬脑膜两层分开、内面衬以内皮细胞而形成，内含静脉血。", section: "nerve" },
+  { front: "内侧丘系", back: "由延髓薄束核和楔束核发出的二级感觉纤维，在中线上左右交叉后上行，经脑桥、中脑止于丘脑腹后外侧核，传导对侧半身的深感觉。", section: "nerve" },
+  { front: "三叉丘系", back: "由三叉神经脑桥核和三叉神经脊束核发出纤维交叉至对侧上行而成，与脊髓丘脑束毗邻上行，止于丘脑，传导头面部浅感觉。", section: "nerve" },
+  { front: "脊髓丘系", back: "脊髓丘脑束进入脑干后形成的上行传导束，传导对侧躯干及四肢的痛觉、温度觉及部分触压觉。", section: "nerve" },
+
+  // ===== 其他 =====
+  { front: "精索", back: "从睾丸上端至腹股沟管腹环的圆索状结构，内含输精管、睾丸动脉、蔓状静脉丛等。", section: "other" },
+  { front: "内囊", back: "由联系大脑皮质和脑干、脊髓的上、下行纤维组成的白质板，位于尾状核、背侧丘脑与豆状核之间，在水平切面上呈「V」字形。", section: "nerve" },
+];
+
+// ── STATE ──
+let currentSection = 'all';
+let words = [...ALL_WORDS];
+let queue = [];
+let mastered = new Set();
+let forgotten = new Set();
+let currentIdx = -1;
+let currentWordIdx = -1;
+let isFlipped = false;
+let animating = false;
+
+const cardContainer = document.getElementById('card-container');
+const cardEl = document.getElementById('card');
+const frontText = document.getElementById('front-text');
+const backText = document.getElementById('back-text');
+const frontTag = document.getElementById('front-tag');
+const backTag = document.getElementById('back-tag');
+const cardIndex = document.getElementById('card-index');
+const progressBar = document.getElementById('progress-bar');
+const statRemain = document.getElementById('stat-remain');
+const statMastered = document.getElementById('stat-mastered');
+const statReview = document.getElementById('stat-review');
+const wordListModal = document.getElementById('word-list-modal');
+const wordListInner = document.getElementById('word-list-inner');
+const btnForgot = document.getElementById('btn-forgot');
+const btnRemember = document.getElementById('btn-remember');
+
+function getFilteredWords() {
+  if (currentSection === 'all') return [...ALL_WORDS];
+  return ALL_WORDS.filter(w => w.section === currentSection);
+}
+
+function buildQueue() {
+  queue = words.map((_, i) => i);
+  shuffle(queue);
+  currentIdx = 0;
+  currentWordIdx = queue[0];
+  isFlipped = false;
+  animating = false;
+  cardEl.classList.remove('flipped');
+  updateCard();
+  updateStats();
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+}
+
+function updateCard() {
+  if (currentWordIdx === -1 || queue.length === 0) {
+    frontText.textContent = '🎉';
+    backText.textContent = '全部复习完毕！';
+    frontTag.textContent = '';
+    backTag.textContent = '';
+    cardIndex.textContent = '已完成';
+    btnForgot.disabled = true;
+    btnRemember.disabled = true;
+    progressBar.style.width = '100%';
+    statRemain.textContent = '0';
+    return;
+  }
+  btnForgot.disabled = false;
+  btnRemember.disabled = false;
+  const w = words[currentWordIdx];
+  frontText.textContent = w.front;
+  backText.textContent = w.back;
+  frontTag.textContent = '术语';
+  backTag.textContent = '释义';
+  cardIndex.textContent = `第 ${currentIdx + 1} / ${queue.length} 个`;
+  updateStats();
+}
+
+function flipCard() {
+  if (queue.length === 0 || currentWordIdx === -1) return;
+  if (animating) return;
+  isFlipped = !isFlipped;
+  cardEl.classList.toggle('flipped', isFlipped);
+}
+
+function markRemembered() {
+  if (queue.length === 0 || currentWordIdx === -1 || animating) return;
+  mastered.add(currentWordIdx);
+  forgotten.delete(currentWordIdx);
+  advanceCard();
+}
+
+function markForgot() {
+  if (queue.length === 0 || currentWordIdx === -1 || animating) return;
+  mastered.delete(currentWordIdx);
+  forgotten.add(currentWordIdx);
+  queue.push(currentWordIdx);
+  advanceCard();
+}
+
+function advanceCard() {
+  const wasFlipped = isFlipped;
+  currentIdx++;
+
+  if (currentIdx >= queue.length) {
+    if (forgotten.size > 0) {
+      queue = Array.from(forgotten);
+      shuffle(queue);
+      forgotten.clear();
+      currentIdx = 0;
+    } else if (mastered.size >= words.length) {
+      currentWordIdx = -1;
+      queue = [];
+      currentIdx = -1;
+    } else {
+      const unmastered = words.map((_, i) => i).filter(i => !mastered.has(i));
+      if (unmastered.length === 0) {
+        currentWordIdx = -1;
+        queue = [];
+        currentIdx = -1;
+      } else {
+        queue = unmastered;
+        shuffle(queue);
+        currentIdx = 0;
+      }
+    }
+  }
+
+  isFlipped = false;
+  cardEl.classList.remove('flipped');
+
+  const scheduledIdx = currentIdx;
+
+  if (wasFlipped) {
+    animating = true;
+    btnForgot.disabled = true;
+    btnRemember.disabled = true;
+    setTimeout(() => {
+      animating = false;
+      if (currentIdx === scheduledIdx) {
+        currentWordIdx = queue.length > 0 && currentIdx < queue.length ? queue[currentIdx] : -1;
+        updateCard();
+      }
+    }, 500);
+  } else {
+    currentWordIdx = queue.length > 0 && currentIdx < queue.length ? queue[currentIdx] : -1;
+    updateCard();
+  }
+}
+
+function updateStats() {
+  const remain = queue.length > 0 && currentIdx < queue.length ? queue.length - currentIdx : 0;
+  statRemain.textContent = remain;
+  statMastered.textContent = mastered.size;
+  statReview.textContent = forgotten.size;
+  const total = words.length;
+  const done = total > 0 ? mastered.size : 0;
+  progressBar.style.width = total > 0 ? Math.round((done / total) * 100) + '%' : '0%';
+}
+
+function shuffleAll() {
+  words = getFilteredWords();
+  mastered.clear();
+  forgotten.clear();
+  buildQueue();
+}
+
+function reviewForgotten() {
+  if (animating) return;
+  if (forgotten.size === 0) {
+    const candidates = words.map((_, i) => i).filter(i => !mastered.has(i));
+    if (candidates.length === 0) {
+      alert('所有词汇都已掌握！');
+      return;
+    }
+    queue = candidates;
+    shuffle(queue);
+  } else {
+    queue = Array.from(forgotten);
+    shuffle(queue);
+    forgotten.clear();
+  }
+  currentIdx = 0;
+  currentWordIdx = queue[0];
+  isFlipped = false;
+  cardEl.classList.remove('flipped');
+  updateCard();
+}
+
+function resetAll() {
+  if (animating) return;
+  words = getFilteredWords();
+  mastered.clear();
+  forgotten.clear();
+  buildQueue();
+}
+
+function toggleWordList() {
+  const isOpen = wordListModal.classList.contains('open');
+  if (isOpen) {
+    wordListModal.classList.remove('open');
+  } else {
+    const filtered = getFilteredWords();
+    wordListInner.innerHTML = `
+      <h3>📋 词汇表（${filtered.length} 个）</h3>
+      ${filtered.map((w, i) => `
+        <div class="word-row">
+          <span class="en">${w.front}</span>
+          <span class="cn">${w.back.substr(0, 50)}${w.back.length > 50 ? '...' : ''}</span>
+        </div>
+      `).join('')}
+    `;
+    wordListModal.classList.add('open');
+  }
+}
+
+document.querySelectorAll('.pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    if (animating) return;
+    document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+    currentSection = pill.dataset.section;
+    resetAll();
+  });
+});
+
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'BUTTON') return;
+  if (animating) return;
+  switch (e.key) {
+    case ' ': case 'Enter':
+      e.preventDefault();
+      flipCard();
+      break;
+    case 'ArrowLeft':
+      markForgot();
+      break;
+    case 'ArrowRight':
+      markRemembered();
+      break;
+    case 'r':
+      resetAll();
+      break;
+    case 'f':
+      reviewForgotten();
+      break;
+  }
+});
+
+words = getFilteredWords();
+buildQueue();
+</script>
+</body>
+</html>

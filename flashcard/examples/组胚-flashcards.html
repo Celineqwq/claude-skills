@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>组织学与胚胎学 · 复习卡片</title>
+<style>
+:root {
+  --bg: #0f172a;
+  --card-bg: #1e293b;
+  --text: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --accent: #3b82f6;
+  --correct: #22c55e;
+  --wrong: #ef4444;
+  --border: #334155;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 20px;
+}
+.container {
+  width: 100%;
+  max-width: 700px;
+  margin: 0 auto;
+}
+/* Header */
+.header { text-align: center; margin-bottom: 20px; }
+.header h1 { font-size: 1.5rem; font-weight: 700; color: var(--accent); margin-bottom: 8px; }
+.header .subtitle { font-size: 0.8rem; color: var(--text-secondary); }
+.header .subtitle span { opacity: 0.8; }
+/* Stats */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.stat-card {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 14px 10px;
+  text-align: center;
+  border: 1px solid var(--border);
+}
+.stat-card .num { font-size: 1.6rem; font-weight: 800; }
+.stat-card .label { font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px; }
+.stat-card.remaining .num { color: var(--accent); }
+.stat-card.mastered .num { color: var(--correct); }
+.stat-card.forgotten .num { color: #fbbf24; }
+/* Progress bar */
+.progress-wrap {
+  background: var(--card-bg);
+  border-radius: 999px;
+  height: 8px;
+  margin-bottom: 16px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--correct));
+  border-radius: 999px;
+  transition: width 0.5s ease;
+  width: 0%;
+}
+/* Section pills */
+.section-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+.pill {
+  padding: 6px 16px;
+  border-radius: 999px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.pill:hover { border-color: var(--accent); color: var(--text); }
+.pill.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+/* Card */
+.card-wrapper {
+  perspective: 1000px;
+  margin-bottom: 16px;
+  cursor: pointer;
+}
+.card {
+  background: var(--card-bg);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  min-height: 280px;
+  position: relative;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
+}
+.card.flipped { transform: rotateY(180deg); }
+.card-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 30px;
+  border-radius: 16px;
+}
+.card-back {
+  transform: rotateY(180deg);
+}
+.card-index {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+/* Card text styles */
+.term {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #cbd5e1;
+  text-align: center;
+  line-height: 1.4;
+  word-break: break-word;
+}
+.definition {
+  font-size: 1.15rem;
+  line-height: 1.7;
+  color: #cbd5e1;
+  text-align: center;
+  word-break: break-word;
+}
+/* Buttons */
+.actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.btn {
+  padding: 10px 20px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--card-bg);
+  color: var(--text);
+  min-width: 80px;
+  text-align: center;
+}
+.btn:hover { opacity: 0.85; transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+.btn-back { color: var(--text-secondary); }
+.btn-back:hover { color: var(--text); border-color: var(--text-secondary); }
+.btn-forgot { border-color: var(--wrong); color: var(--wrong); }
+.btn-forgot:hover { background: var(--wrong); color: #fff; }
+.btn-remember { border-color: var(--correct); color: var(--correct); }
+.btn-remember:hover { background: var(--correct); color: #fff; }
+.btn-flip { background: var(--accent); color: #fff; border-color: var(--accent); }
+.btn-flip:hover { background: #2563eb; }
+/* Bottom toolbar */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 8px;
+}
+.toolbar .btn { font-size: 0.8rem; padding: 8px 16px; min-width: auto; }
+/* Done state */
+.done {
+  text-align: center;
+  padding: 60px 20px;
+}
+.done h2 { font-size: 2rem; color: var(--correct); margin-bottom: 12px; }
+.done p { color: var(--text-secondary); margin-bottom: 24px; }
+/* Modal */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 100;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--card-bg);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  width: 100%;
+  max-width: 600px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+.modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.modal-header h3 { font-size: 1.1rem; }
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.4rem;
+  cursor: pointer;
+  padding: 4px;
+}
+.modal-close:hover { color: var(--text); }
+.modal-body { padding: 16px 20px; overflow-y: auto; flex: 1; }
+.modal-search {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: #0f172a;
+  color: var(--text);
+  font-size: 0.9rem;
+  margin-bottom: 12px;
+  outline: none;
+}
+.modal-search:focus { border-color: var(--accent); }
+.word-list-header {
+  display: grid;
+  grid-template-columns: 40px 1fr 1fr;
+  gap: 12px;
+  padding: 8px 4px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+.word-list {
+  max-height: 55vh;
+  overflow-y: auto;
+}
+.word-row {
+  display: grid;
+  grid-template-columns: 40px 1fr 1fr;
+  gap: 12px;
+  padding: 8px 4px;
+  border-bottom: 1px solid rgba(51,65,85,0.4);
+  font-size: 0.85rem;
+  align-items: center;
+}
+.word-row.mastered { opacity: 0.6; }
+.word-row .status { text-align: center; font-size: 0.9rem; }
+.word-row .word-front { color: var(--text); }
+.word-row .word-back { color: var(--text-secondary); }
+.no-match { text-align: center; padding: 30px; color: var(--text-secondary); }
+.list-summary { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 8px; }
+@media (max-width: 500px) {
+  .card { min-height: 220px; }
+  .term { font-size: 1.4rem; }
+  .definition { font-size: 1rem; }
+  .stats { gap: 6px; }
+  .stat-card { padding: 10px 6px; }
+  .stat-card .num { font-size: 1.2rem; }
+  .btn { padding: 8px 14px; font-size: 0.8rem; min-width: 60px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>📚 组织学与胚胎学</h1>
+    <div class="subtitle"><span>点击卡片翻转 · 选择记得或忘了追踪进度 · 键盘快捷键操作</span></div>
+  </div>
+
+  <div class="stats">
+    <div class="stat-card remaining">
+      <div class="num" id="remainingCount">0</div>
+      <div class="label">剩余</div>
+    </div>
+    <div class="stat-card mastered">
+      <div class="num" id="masteredCount">0</div>
+      <div class="label">已掌握</div>
+    </div>
+    <div class="stat-card forgotten">
+      <div class="num" id="forgottenCount">0</div>
+      <div class="label">待复习</div>
+    </div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
+  <div class="section-pills" id="pills">
+    <div class="pill active" data-section="all">全部 (294)</div>
+    <div class="pill" data-section="en-cn">英译汉 (278)</div>
+    <div class="pill" data-section="cn-def">名词解释 (16)</div>
+  </div>
+
+  <div class="card-wrapper" id="cardWrapper">
+    <div class="card" id="card">
+      <div class="card-face card-front">
+        <div class="card-index" id="cardIndex">第 0 / 0 个</div>
+        <div class="term" id="frontText">加载中...</div>
+      </div>
+      <div class="card-face card-back">
+        <div class="card-index">背面</div>
+        <div class="definition" id="backText">加载中...</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-back" id="btnBack" title="上一个词 (↑)">⬆ 上一个</button>
+    <button class="btn btn-forgot" id="btnForgot" title="忘了 (←)">😕 忘了</button>
+    <button class="btn btn-flip" id="btnFlip" title="翻转 (Space/Enter)">🔄 翻转</button>
+    <button class="btn btn-remember" id="btnRemember" title="记得 (→)">✅ 记得</button>
+  </div>
+
+  <div class="toolbar">
+    <button class="btn" id="btnShuffle">🔀 打乱重来</button>
+    <button class="btn" id="btnReview">📝 复习遗忘词</button>
+    <button class="btn" id="btnWordList">📋 词汇表</button>
+    <button class="btn" id="btnReset">🔄 全部重置</button>
+  </div>
+
+  <div id="doneView" class="done" style="display:none">
+    <h2>🎉 全部复习完毕！</h2>
+    <p>太棒了！你已经掌握了当前分组的所有卡片 ~</p>
+    <button class="btn btn-flip" onclick="resetAll()">🔄 重新开始</button>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="wordListModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>📋 词汇表</h3>
+      <button class="modal-close" id="modalClose">&times;</button>
+    </div>
+    <div class="modal-body">
+      <input type="text" class="modal-search" id="wordSearch" placeholder="🔍 搜索词汇..." autocomplete="off">
+      <div class="list-summary" id="listSummary"></div>
+      <div class="word-list-header">
+        <span>状态</span>
+        <span>术语</span>
+        <span>释义</span>
+      </div>
+      <div class="word-list" id="wordListContainer"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const ALL_WORDS = [
+  {"front":"histology","back":"组织学","section":"en-cn"},
+  {"front":"embryology","back":"胚胎学","section":"en-cn"},
+  {"front":"tissue","back":"组织","section":"en-cn"},
+  {"front":"organ","back":"器官","section":"en-cn"},
+  {"front":"system","back":"系统","section":"en-cn"},
+  {"front":"basophilia","back":"嗜碱性","section":"en-cn"},
+  {"front":"acidophilia","back":"嗜酸性","section":"en-cn"},
+  {"front":"neutrophilia","back":"中性","section":"en-cn"},
+  {"front":"metachromasia","back":"异染性","section":"en-cn"},
+  {"front":"epithelial tissue","back":"上皮组织","section":"en-cn"},
+  {"front":"polarity","back":"极性","section":"en-cn"},
+  {"front":"covering epithelium","back":"被覆上皮","section":"en-cn"},
+  {"front":"simple squamous epithelium","back":"单层扁平上皮","section":"en-cn"},
+  {"front":"endothelium","back":"内皮","section":"en-cn"},
+  {"front":"mesothelium","back":"间皮","section":"en-cn"},
+  {"front":"simple cuboidal epithelium","back":"单层立方上皮","section":"en-cn"},
+  {"front":"simple columnar epithelium","back":"单层柱状上皮","section":"en-cn"},
+  {"front":"pseudostratified ciliated columnar","back":"假复层纤毛柱状上皮","section":"en-cn"},
+  {"front":"stratified squamous epithelium","back":"复层扁平上皮","section":"en-cn"},
+  {"front":"keratinized stratified squamous epithelium","back":"角化的复层扁平上皮","section":"en-cn"},
+  {"front":"Nonkeratinized stratified squamous epithelium","back":"未角化的复层扁平上皮","section":"en-cn"},
+  {"front":"stratified columnar epithelium","back":"复层柱状上皮","section":"en-cn"},
+  {"front":"transitional epithelium","back":"变移上皮","section":"en-cn"},
+  {"front":"gland","back":"腺","section":"en-cn"},
+  {"front":"microvillus","back":"微绒毛","section":"en-cn"},
+  {"front":"cell junction","back":"细胞连接","section":"en-cn"},
+  {"front":"tight junction","back":"紧密连接","section":"en-cn"},
+  {"front":"zonula adherens","back":"黏着小带","section":"en-cn"},
+  {"front":"intermediate junction","back":"中间连接","section":"en-cn"},
+  {"front":"desmosome","back":"桥粒","section":"en-cn"},
+  {"front":"gap junction","back":"缝隙连接","section":"en-cn"},
+  {"front":"junction complex","back":"连接复合体","section":"en-cn"},
+  {"front":"basal lamina","back":"基板","section":"en-cn"},
+  {"front":"reticular lamina","back":"网板","section":"en-cn"},
+  {"front":"hemidesmosome","back":"半桥粒","section":"en-cn"},
+  {"front":"connective tissue","back":"结缔组织织","section":"en-cn"},
+  {"front":"loose connective tissue","back":"疏松结缔组织","section":"en-cn"},
+  {"front":"fibroblast","back":"成纤维细胞","section":"en-cn"},
+  {"front":"fibrocyte","back":"纤维细胞","section":"en-cn"},
+  {"front":"plasma cell","back":"浆细胞","section":"en-cn"},
+  {"front":"antibody","back":"抗体","section":"en-cn"},
+  {"front":"macrophage","back":"巨噬细胞","section":"en-cn"},
+  {"front":"mast cell","back":"肥大细胞","section":"en-cn"},
+  {"front":"fat cell","back":"脂肪细胞","section":"en-cn"},
+  {"front":"collagenous fiber","back":"胶原纤维","section":"en-cn"},
+  {"front":"elastic fiber","back":"弹性纤维","section":"en-cn"},
+  {"front":"reticular fiber","back":"网状纤维","section":"en-cn"},
+  {"front":"tissue fluid","back":"组织液","section":"en-cn"},
+  {"front":"dense connective tissue","back":"致密结缔组织","section":"en-cn"},
+  {"front":"dense regular connective tissue","back":"规则致密结缔组织","section":"en-cn"},
+  {"front":"dense irregular connective tissue","back":"不规则致密结缔组织","section":"en-cn"},
+  {"front":"elastic tissue","back":"弹性组织","section":"en-cn"},
+  {"front":"adipose tissue","back":"脂肪组织","section":"en-cn"},
+  {"front":"reticular tissue","back":"网状组织","section":"en-cn"},
+  {"front":"reticular cell","back":"网状细胞","section":"en-cn"},
+  {"front":"cartilage","back":"软骨","section":"en-cn"},
+  {"front":"hyaline cartilage","back":"透明软骨","section":"en-cn"},
+  {"front":"cartilage matrix","back":"软骨基质","section":"en-cn"},
+  {"front":"chondrocyte","back":"软骨细胞","section":"en-cn"},
+  {"front":"chondron","back":"软骨单位","section":"en-cn"},
+  {"front":"perichondrium","back":"软骨膜","section":"en-cn"},
+  {"front":"elastic cartilage","back":"弹性软骨","section":"en-cn"},
+  {"front":"fibrocartilage","back":"纤维软骨","section":"en-cn"},
+  {"front":"bone lamella","back":"骨板","section":"en-cn"},
+  {"front":"osteoprogenitor cell","back":"骨祖细胞","section":"en-cn"},
+  {"front":"osteoblast","back":"成骨细胞","section":"en-cn"},
+  {"front":"osteocyte","back":"骨细胞","section":"en-cn"},
+  {"front":"bone canaliculus","back":"骨小管","section":"en-cn"},
+  {"front":"osteoclast","back":"破骨细胞","section":"en-cn"},
+  {"front":"compact bone","back":"密质骨","section":"en-cn"},
+  {"front":"spongy bone","back":"松质骨","section":"en-cn"},
+  {"front":"osteon","back":"骨单位","section":"en-cn"},
+  {"front":"Haversion system","back":"哈弗斯系统","section":"en-cn"},
+  {"front":"central canal","back":"中央管","section":"en-cn"},
+  {"front":"bone trabecula","back":"骨小梁","section":"en-cn"},
+  {"front":"periosteum","back":"骨外膜","section":"en-cn"},
+  {"front":"endosteum","back":"骨内膜","section":"en-cn"},
+  {"front":"plasma","back":"血浆","section":"en-cn"},
+  {"front":"serum","back":"血清","section":"en-cn"},
+  {"front":"erythrocyte","back":"红细胞","section":"en-cn"},
+  {"front":"hemoglobin","back":"血红蛋白","section":"en-cn"},
+  {"front":"reticulocyte","back":"网织红细胞","section":"en-cn"},
+  {"front":"leukocyte","back":"白细胞","section":"en-cn"},
+  {"front":"granulocyte","back":"有粒白细胞","section":"en-cn"},
+  {"front":"agranulocyte","back":"无粒白细胞","section":"en-cn"},
+  {"front":"neutrophil","back":"中性粒细胞","section":"en-cn"},
+  {"front":"eosinophil","back":"嗜酸性粒细胞","section":"en-cn"},
+  {"front":"basophil","back":"嗜碱性粒细胞","section":"en-cn"},
+  {"front":"monocyte","back":"单核细胞","section":"en-cn"},
+  {"front":"lymphocyte","back":"淋巴细胞","section":"en-cn"},
+  {"front":"blood platelet","back":"血小板","section":"en-cn"},
+  {"front":"megakaryocyte","back":"巨核细胞","section":"en-cn"},
+  {"front":"hematopoietic stem cell","back":"造血干细胞","section":"en-cn"},
+  {"front":"skeletal muscle","back":"骨骼肌","section":"en-cn"},
+  {"front":"cardiac muscle","back":"心肌","section":"en-cn"},
+  {"front":"smooth muscle","back":"平滑肌","section":"en-cn"},
+  {"front":"sarcomere","back":"肌节","section":"en-cn"},
+  {"front":"myosin","back":"肌球蛋白","section":"en-cn"},
+  {"front":"actin","back":"肌动蛋白","section":"en-cn"},
+  {"front":"tropomyosin","back":"原肌球蛋白","section":"en-cn"},
+  {"front":"troponin","back":"肌钙蛋白","section":"en-cn"},
+  {"front":"transverse tubule","back":"横小管","section":"en-cn"},
+  {"front":"longitudinal tubule","back":"纵小管","section":"en-cn"},
+  {"front":"terminal cisternae","back":"终池","section":"en-cn"},
+  {"front":"triad","back":"三联体","section":"en-cn"},
+  {"front":"intercalated disk","back":"闰盘","section":"en-cn"},
+  {"front":"diad","back":"二联体","section":"en-cn"},
+  {"front":"neuroglial cell","back":"神经胶质细胞","section":"en-cn"},
+  {"front":"neuron","back":"神经元","section":"en-cn"},
+  {"front":"soma","back":"细胞体","section":"en-cn"},
+  {"front":"Nissl body","back":"尼氏体","section":"en-cn"},
+  {"front":"neurotransmitter","back":"神经递质","section":"en-cn"},
+  {"front":"neurofibril","back":"神经原纤维","section":"en-cn"},
+  {"front":"multipolar neuron","back":"多极神经元","section":"en-cn"},
+  {"front":"bipolar neuron","back":"双极神经元","section":"en-cn"},
+  {"front":"pseudonipolar neuron","back":"假单极神经元","section":"en-cn"},
+  {"front":"sensory neuron","back":"感觉神经元","section":"en-cn"},
+  {"front":"afferent neuron","back":"传入神经元","section":"en-cn"},
+  {"front":"motor neuron","back":"运动神经元","section":"en-cn"},
+  {"front":"efferent neuron","back":"传出神经元","section":"en-cn"},
+  {"front":"interneuron","back":"中间神经元","section":"en-cn"},
+  {"front":"chemical/electrical synapse","back":"化学/电突触","section":"en-cn"},
+  {"front":"astrocyte","back":"星形胶质细胞","section":"en-cn"},
+  {"front":"oligodendrocyte","back":"少突胶质细胞","section":"en-cn"},
+  {"front":"microglia","back":"小胶质细胞","section":"en-cn"},
+  {"front":"ependymal cell","back":"室管膜细胞","section":"en-cn"},
+  {"front":"Schwann cell","back":"施万细胞","section":"en-cn"},
+  {"front":"satellite cell","back":"卫星细胞","section":"en-cn"},
+  {"front":"nerve fiber","back":"神经纤维","section":"en-cn"},
+  {"front":"myelin sheath","back":"髓鞘","section":"en-cn"},
+  {"front":"myelinated nerve fiber","back":"有髓神经纤维","section":"en-cn"},
+  {"front":"unmyelinated nerve fiber","back":"无髓神经纤维","section":"en-cn"},
+  {"front":"Ranvier node","back":"郎飞结","section":"en-cn"},
+  {"front":"neurilemmal","back":"神经膜","section":"en-cn"},
+  {"front":"nerve ending","back":"神经末梢","section":"en-cn"},
+  {"front":"subendothelial layer","back":"内皮下层","section":"en-cn"},
+  {"front":"interal elastic membrane","back":"内弹性膜","section":"en-cn"},
+  {"front":"external elastic membrane","back":"外弹性膜","section":"en-cn"},
+  {"front":"artery","back":"动脉","section":"en-cn"},
+  {"front":"elastic artery","back":"弹性动脉","section":"en-cn"},
+  {"front":"muscular artery","back":"肌性动脉","section":"en-cn"},
+  {"front":"arteriole","back":"微动脉","section":"en-cn"},
+  {"front":"continuous capillary","back":"连续毛细血管","section":"en-cn"},
+  {"front":"fenestrated capillary","back":"有孔毛细血管","section":"en-cn"},
+  {"front":"vein","back":"静脉","section":"en-cn"},
+  {"front":"venule","back":"微静脉","section":"en-cn"},
+  {"front":"vein valve","back":"静脉瓣","section":"en-cn"},
+  {"front":"microcirculation","back":"微循环","section":"en-cn"},
+  {"front":"endocardium","back":"心内膜","section":"en-cn"},
+  {"front":"epicardium","back":"心外膜","section":"en-cn"},
+  {"front":"cardiac value","back":"心瓣膜","section":"en-cn"},
+  {"front":"Purkinje fiber","back":"浦肯野纤维","section":"en-cn"},
+  {"front":"organelle","back":"细胞器","section":"en-cn"},
+  {"front":"fibrinogen","back":"纤维蛋白原","section":"en-cn"},
+  {"front":"hormones","back":"激素","section":"en-cn"},
+  {"front":"lymphoid tissue","back":"淋巴组织","section":"en-cn"},
+  {"front":"lymphoid nodule","back":"淋巴小结","section":"en-cn"},
+  {"front":"lymphoid follicle","back":"淋巴滤泡","section":"en-cn"},
+  {"front":"germinal center","back":"生发中心","section":"en-cn"},
+  {"front":"nodule cap","back":"小结帽","section":"en-cn"},
+  {"front":"thymus","back":"胸腺","section":"en-cn"},
+  {"front":"cortex","back":"皮质","section":"en-cn"},
+  {"front":"medulla","back":"髓质","section":"en-cn"},
+  {"front":"lymph node","back":"淋巴结","section":"en-cn"},
+  {"front":"trabecula","back":"小梁","section":"en-cn"},
+  {"front":"superficial cortex","back":"浅层皮质","section":"en-cn"},
+  {"front":"paracortex zone","back":"副皮质区","section":"en-cn"},
+  {"front":"thymus dependent area","back":"胸腺依赖区","section":"en-cn"},
+  {"front":"cortical sinus","back":"皮质淋巴窦","section":"en-cn"},
+  {"front":"medullary cord","back":"髓索","section":"en-cn"},
+  {"front":"medullary sinus","back":"髓窦","section":"en-cn"},
+  {"front":"recirculation of lymphocyte","back":"淋巴细胞再循环","section":"en-cn"},
+  {"front":"white pulp","back":"白髓","section":"en-cn"},
+  {"front":"periarterial lymphatic sheath","back":"动脉周围淋巴鞘","section":"en-cn"},
+  {"front":"splenic corpuscle","back":"脾小体","section":"en-cn"},
+  {"front":"red pulp","back":"红髓","section":"en-cn"},
+  {"front":"splenic cord","back":"脾索","section":"en-cn"},
+  {"front":"splenic sinus","back":"脾血窦","section":"en-cn"},
+  {"front":"postcapillary venules","back":"毛细血管后微静脉","section":"en-cn"},
+  {"front":"digestive tract","back":"消化管","section":"en-cn"},
+  {"front":"mucosa","back":"黏膜","section":"en-cn"},
+  {"front":"submucosa","back":"黏膜下层","section":"en-cn"},
+  {"front":"fundic gland","back":"胃底腺","section":"en-cn"},
+  {"front":"chief cell","back":"主细胞","section":"en-cn"},
+  {"front":"parietal cell","back":"壁细胞","section":"en-cn"},
+  {"front":"Paneth cell","back":"潘氏细胞","section":"en-cn"},
+  {"front":"central lacteal","back":"中央乳糜管","section":"en-cn"},
+  {"front":"duodenum","back":"十二指肠","section":"en-cn"},
+  {"front":"intestinal villus","back":"肠绒毛","section":"en-cn"},
+  {"front":"pancreas","back":"胰腺","section":"en-cn"},
+  {"front":"pancreatic acinar cell","back":"胰腺腺泡细胞","section":"en-cn"},
+  {"front":"pancreas islet","back":"胰岛","section":"en-cn"},
+  {"front":"hepatic lobule","back":"肝小叶","section":"en-cn"},
+  {"front":"hepatic plate","back":"肝板","section":"en-cn"},
+  {"front":"hepatocyte","back":"肝细胞","section":"en-cn"},
+  {"front":"hepatic sinusoid","back":"肝血窦","section":"en-cn"},
+  {"front":"bile canaliculi","back":"胆小管","section":"en-cn"},
+  {"front":"portal area","back":"门管区","section":"en-cn"},
+  {"front":"hepatic macrophage/kupffer cell","back":"肝巨噬细胞/库普弗细胞","section":"en-cn"},
+  {"front":"respiratory system","back":"呼吸系统","section":"en-cn"},
+  {"front":"trachea","back":"气管","section":"en-cn"},
+  {"front":"bronchi","back":"支气管","section":"en-cn"},
+  {"front":"brinchial tree","back":"支气管树","section":"en-cn"},
+  {"front":"bronchiole","back":"细支气管","section":"en-cn"},
+  {"front":"terminal bronchiole","back":"终末细支气管","section":"en-cn"},
+  {"front":"respiratory bronchiole","back":"呼吸性细支气管","section":"en-cn"},
+  {"front":"alveolar dust","back":"肺泡管","section":"en-cn"},
+  {"front":"alveolar sac","back":"肺泡囊","section":"en-cn"},
+  {"front":"pulmonary alveolus","back":"肺泡","section":"en-cn"},
+  {"front":"blood-air barrier","back":"气-血屏障","section":"en-cn"},
+  {"front":"alveolar septum","back":"肺泡隔","section":"en-cn"},
+  {"front":"conducting portion","back":"导气部","section":"en-cn"},
+  {"front":"respiratory portion","back":"呼吸部","section":"en-cn"},
+  {"front":"nephron","back":"肾单位","section":"en-cn"},
+  {"front":"renal corpuscle","back":"肾小体","section":"en-cn"},
+  {"front":"glomerulus","back":"血管球","section":"en-cn"},
+  {"front":"renal capsule/Bowman's capsule","back":"肾小囊/鲍曼囊","section":"en-cn"},
+  {"front":"podocytes","back":"足细胞","section":"en-cn"},
+  {"front":"filtration membrane/barrier","back":"滤过膜/屏障","section":"en-cn"},
+  {"front":"renal tubule","back":"肾小管","section":"en-cn"},
+  {"front":"juxtaglomerular cell","back":"球旁细胞","section":"en-cn"},
+  {"front":"macula densa","back":"致密斑","section":"en-cn"},
+  {"front":"proximal tubule","back":"近端小管","section":"en-cn"},
+  {"front":"distal tubule","back":"远端小管","section":"en-cn"},
+  {"front":"distal convoluted tubule","back":"远曲小管","section":"en-cn"},
+  {"front":"endocrine system","back":"内分泌系统","section":"en-cn"},
+  {"front":"thyroid","back":"甲状腺","section":"en-cn"},
+  {"front":"thyroid follicle","back":"甲状腺滤泡","section":"en-cn"},
+  {"front":"parafollicular cell","back":"滤泡旁细胞","section":"en-cn"},
+  {"front":"adrenal gland","back":"肾上腺","section":"en-cn"},
+  {"front":"zona glomerulosa","back":"球状带","section":"en-cn"},
+  {"front":"zona fasciculata","back":"束状带","section":"en-cn"},
+  {"front":"zona reticularis","back":"网状带","section":"en-cn"},
+  {"front":"chromaffin cell","back":"嗜铬细胞","section":"en-cn"},
+  {"front":"hypophysis","back":"垂体","section":"en-cn"},
+  {"front":"hypothalamus","back":"下丘脑","section":"en-cn"},
+  {"front":"adenohypophysis","back":"腺垂体","section":"en-cn"},
+  {"front":"neurohypophysis","back":"神经垂体","section":"en-cn"},
+  {"front":"pars distalis","back":"远侧部","section":"en-cn"},
+  {"front":"chromophobe cell","back":"嫌色细胞","section":"en-cn"},
+  {"front":"hypophyseal portal system","back":"垂体门脉系统","section":"en-cn"},
+  {"front":"Herring body","back":"赫林体","section":"en-cn"},
+  {"front":"calcitonin","back":"降钙素","section":"en-cn"},
+  {"front":"epidermis","back":"表皮","section":"en-cn"},
+  {"front":"dermis","back":"真皮","section":"en-cn"},
+  {"front":"seminiferous tubule","back":"生精小管","section":"en-cn"},
+  {"front":"spermatogenic epithelium","back":"生精上皮","section":"en-cn"},
+  {"front":"spermatogenic cell","back":"生精细胞","section":"en-cn"},
+  {"front":"spermatogonium","back":"精原细胞","section":"en-cn"},
+  {"front":"primary spermatocyte","back":"初级精母细胞","section":"en-cn"},
+  {"front":"secondary spermatocyte","back":"次级精母细胞","section":"en-cn"},
+  {"front":"spermatid","back":"精子细胞","section":"en-cn"},
+  {"front":"spermatozoon","back":"精子","section":"en-cn"},
+  {"front":"sustentacular cell/sertoli cell","back":"支持细胞","section":"en-cn"},
+  {"front":"blood-testis barrier","back":"血-睾屏障","section":"en-cn"},
+  {"front":"testicular interstitial cell/leydig cell","back":"睾丸间质细胞","section":"en-cn"},
+  {"front":"endocrine","back":"内分泌","section":"en-cn"},
+  {"front":"androgen","back":"雄激素","section":"en-cn"},
+  {"front":"epididymis","back":"附睾","section":"en-cn"},
+  {"front":"spermiogenesis","back":"精子形成","section":"en-cn"},
+  {"front":"spermatogenesis","back":"精子发生","section":"en-cn"},
+  {"front":"ovary","back":"卵巢","section":"en-cn"},
+  {"front":"oocyte","back":"卵母细胞","section":"en-cn"},
+  {"front":"uterus","back":"子宫","section":"en-cn"},
+  {"front":"follicle","back":"卵泡","section":"en-cn"},
+  {"front":"primordial follicle","back":"原始卵泡","section":"en-cn"},
+  {"front":"primary follicle","back":"初级卵泡","section":"en-cn"},
+  {"front":"secondary follicle","back":"次级卵泡","section":"en-cn"},
+  {"front":"mature follicle","back":"成熟卵泡","section":"en-cn"},
+  {"front":"ovulation","back":"排卵","section":"en-cn"},
+  {"front":"menstrual cycle","back":"月经周期","section":"en-cn"},
+  {"front":"corona radiate","back":"放射冠","section":"en-cn"},
+  {"front":"zona pellucida","back":"透明带","section":"en-cn"},
+  {"front":"cumulus oophurus","back":"卵丘","section":"en-cn"},
+  {"front":"stratum granulosum","back":"颗粒层","section":"en-cn"},
+  {"front":"follicular antrum","back":"卵泡腔","section":"en-cn"},
+  {"front":"theca foliculi","back":"卵泡膜","section":"en-cn"},
+  {"front":"闰盘","back":"（暂无详细解释）","section":"cn-def"},
+  {"front":"突触小泡","back":"（暂无详细解释）","section":"cn-def"},
+  {"front":"浦肯野纤维","back":"（暂无详细解释）","section":"cn-def"},
+  {"front":"垂体门脉系统","back":"（暂无详细解释）","section":"cn-def"},
+  {"front":"排卵","back":"（暂无详细解释）","section":"cn-def"},
+  {"front":"卵泡","back":"（暂无详细解释）","section":"cn-def"},
+  {"front":"受精","back":"（暂无详细解释）","section":"cn-def"},
+  {"front":"胚泡","back":"（暂无详细解释）","section":"cn-def"},
+  {"front":"胎盘屏障","back":"（暂无详细解释）","section":"cn-def"},
+  {"front":"气血屏障","back":"（暂无详细解释）","section":"cn-def"},
+  {"front":"内皮","back":"衬在心脏、血管和淋巴管腔面的单层扁平上皮称内皮。","section":"cn-def"},
+  {"front":"间皮","back":"覆盖在胸膜、腹膜和心包膜表面的单层扁平上皮称间皮。","section":"cn-def"},
+  {"front":"微绒毛","back":"上皮细胞游离面细胞膜和细胞质伸出的微细指状突起，其内含微丝、其功能是扩大细胞游离面的表面积，有利于吸收。","section":"cn-def"},
+  {"front":"纤毛","back":"上皮细胞游离面细胞膜和细胞质伸出的许多细长突起，其内有纵行微管，纤毛具有定向摆动的能力。","section":"cn-def"},
+  {"front":"连接复合体","back":"紧密连接、中间连接、桥粒、缝隙连接，两种或两种以上连接同时存在时称连接复合体。","section":"cn-def"},
+  {"front":"基膜","back":"基膜又称基底膜，是上皮细胞基底面与深部结缔组织间共同形成的薄膜。电镜下，基膜分为两层，靠近上皮的部分为基板，与结缔组织相接的部分为网板，二者分别由上皮细胞和结缔组织中成纤维细胞产生。基膜除有支持和连接作用外，还是半透膜，有利于上皮细胞与深部结缔组织进行物质交换。","section":"cn-def"}
+];
+
+// 状态变量
+var currentSection = 'all';
+var filteredIndices = [];
+var queue = [];
+var currentIdx = 0;
+var currentWordIdx = -1;
+var isFlipped = false;
+var mastered = new Set();
+var forgotten = new Set();
+var historyStack = [];
+var animating = false;
+
+// DOM 引用
+var card = document.getElementById('card');
+var frontText = document.getElementById('frontText');
+var backText = document.getElementById('backText');
+var cardIndex = document.getElementById('cardIndex');
+var remainingCount = document.getElementById('remainingCount');
+var masteredCount = document.getElementById('masteredCount');
+var forgottenCount = document.getElementById('forgottenCount');
+var progressBar = document.getElementById('progressBar');
+var doneView = document.getElementById('doneView');
+var cardWrapper = document.getElementById('cardWrapper');
+
+function getSectionIndices(section) {
+  if (section === 'all') return ALL_WORDS.map(function(_, i) { return i; });
+  return ALL_WORDS.reduce(function(acc, w, i) {
+    if (w.section === section) acc.push(i);
+    return acc;
+  }, []);
+}
+
+function shuffle(arr) {
+  for (var i = arr.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var tmp = arr[i];
+    arr[i] = arr[j];
+    arr[j] = tmp;
+  }
+  return arr;
+}
+
+function initQueue(section) {
+  filteredIndices = getSectionIndices(section);
+  queue = shuffle(filteredIndices.slice());
+  currentIdx = 0;
+  currentWordIdx = queue.length > 0 ? queue[0] : -1;
+  isFlipped = false;
+  card.classList.remove('flipped');
+  mastered = new Set();
+  forgotten = new Set();
+  historyStack = [];
+}
+
+function getCard(i) {
+  if (i >= 0 && i < ALL_WORDS.length) return ALL_WORDS[i];
+  return null;
+}
+
+function updateCard() {
+  if (currentWordIdx >= 0 && currentWordIdx < ALL_WORDS.length) {
+    var word = ALL_WORDS[currentWordIdx];
+    frontText.textContent = word.front;
+    backText.textContent = word.back;
+    cardIndex.textContent = '第 ' + (currentIdx + 1) + ' / ' + queue.length + ' 个';
+  }
+}
+
+function updateStats() {
+  var total = filteredIndices.length;
+  var remaining = queue.length - currentIdx;
+  remainingCount.textContent = remaining;
+  masteredCount.textContent = mastered.size;
+  forgottenCount.textContent = forgotten.size;
+  var pct = total > 0 ? Math.round(mastered.size / total * 100) : 0;
+  progressBar.style.width = pct + '%';
+}
+
+function advanceCard() {
+  currentIdx++;
+  if (currentIdx >= queue.length) {
+    if (forgotten.size > 0) {
+      var reviewList = [];
+      forgotten.forEach(function(idx) { reviewList.push(idx); });
+      queue = shuffle(reviewList);
+      currentIdx = 0;
+      currentWordIdx = queue[0];
+    } else {
+      doneView.style.display = 'block';
+      cardWrapper.style.display = 'none';
+      updateStats();
+      return;
+    }
+  } else {
+    currentWordIdx = queue[currentIdx];
+  }
+  isFlipped = false;
+  card.classList.remove('flipped');
+  updateCard();
+  updateStats();
+}
+
+function markForgot() {
+  if (queue.length === 0 || currentWordIdx === -1 || animating) return;
+  historyStack.push({ idx: currentIdx, wordIdx: currentWordIdx, qlen: queue.length });
+  mastered.delete(currentWordIdx);
+  forgotten.add(currentWordIdx);
+  // 暂时移出队列中的当前位置，重新追加到末尾
+  var wi = queue.splice(currentIdx, 1)[0];
+  queue.push(wi);
+  // currentIdx 不变，但 queue 变了，重新映射
+  currentWordIdx = queue[currentIdx];
+  isFlipped = false;
+  card.classList.remove('flipped');
+  updateCard();
+  updateStats();
+}
+
+function markRemembered() {
+  if (queue.length === 0 || currentWordIdx === -1 || animating) return;
+  historyStack.push({ idx: currentIdx, wordIdx: currentWordIdx, qlen: queue.length });
+  mastered.add(currentWordIdx);
+  forgotten.delete(currentWordIdx);
+  advanceCard();
+}
+
+function goBack() {
+  if (historyStack.length === 0 || animating) return;
+  var last = historyStack.pop();
+  forgotten.delete(last.wordIdx);
+  mastered.delete(last.wordIdx);
+  // 恢复状态
+  currentIdx = last.idx;
+  currentWordIdx = last.wordIdx;
+  isFlipped = false;
+  card.classList.remove('flipped');
+  updateCard();
+  updateStats();
+  doneView.style.display = 'none';
+  cardWrapper.style.display = 'block';
+}
+
+function switchSection(section) {
+  currentSection = section;
+  document.querySelectorAll('.pill').forEach(function(p) {
+    p.classList.toggle('active', p.dataset.section === section);
+  });
+  initQueue(section);
+  updateCard();
+  updateStats();
+  doneView.style.display = 'none';
+  cardWrapper.style.display = 'block';
+  updatePillCounts();
+}
+
+function updatePillCounts() {
+  document.querySelectorAll('.pill').forEach(function(p) {
+    var sec = p.dataset.section;
+    if (sec === 'all') {
+      p.textContent = '全部 (' + ALL_WORDS.length + ')';
+    } else {
+      var cnt = ALL_WORDS.filter(function(w) { return w.section === sec; }).length;
+      p.textContent = (sec === 'en-cn' ? '英译汉' : '名词解释') + ' (' + cnt + ')';
+    }
+  });
+}
+
+function resetAll() {
+  historyStack = [];
+  initQueue(currentSection);
+  updateCard();
+  updateStats();
+  doneView.style.display = 'none';
+  cardWrapper.style.display = 'block';
+}
+
+function reviewForgotten() {
+  if (forgotten.size === 0) return;
+  var reviewList = [];
+  forgotten.forEach(function(idx) { reviewList.push(idx); });
+  queue = shuffle(reviewList);
+  currentIdx = 0;
+  currentWordIdx = queue[0];
+  mastered = new Set();
+  forgotten = new Set();
+  historyStack = [];
+  isFlipped = false;
+  card.classList.remove('flipped');
+  updateCard();
+  updateStats();
+  doneView.style.display = 'none';
+  cardWrapper.style.display = 'block';
+}
+
+function shuffleAll() {
+  historyStack = [];
+  queue = shuffle(filteredIndices.slice());
+  currentIdx = 0;
+  currentWordIdx = queue.length > 0 ? queue[0] : -1;
+  isFlipped = false;
+  card.classList.remove('flipped');
+  mastered = new Set();
+  forgotten = new Set();
+  historyStack = [];
+  updateCard();
+  updateStats();
+  doneView.style.display = 'none';
+  cardWrapper.style.display = 'block';
+}
+
+// Modal functions
+function openWordList() {
+  document.getElementById('wordListModal').classList.add('open');
+  renderWordList();
+  setTimeout(function() {
+    document.getElementById('wordSearch').focus();
+  }, 100);
+}
+function closeWordList() {
+  document.getElementById('wordListModal').classList.remove('open');
+}
+
+function renderWordList() {
+  var query = document.getElementById('wordSearch').value.toLowerCase().trim();
+  var container = document.getElementById('wordListContainer');
+  var summary = document.getElementById('listSummary');
+  var list = ALL_WORDS.filter(function(w, i) {
+    if (currentSection !== 'all' && w.section !== currentSection) return false;
+    if (!query) return true;
+    return w.front.toLowerCase().includes(query) || w.back.toLowerCase().includes(query);
+  });
+  var masteredCount = 0;
+  var forgottenCount = 0;
+  list.forEach(function(w, i) {
+    var idx = ALL_WORDS.indexOf(w);
+    if (mastered.has(idx)) masteredCount++;
+    if (forgotten.has(idx)) forgottenCount++;
+  });
+  summary.textContent = '共 ' + list.length + ' 个 · 已掌握 ' + masteredCount + ' 个 · 待复习 ' + forgottenCount + ' 个';
+  if (list.length === 0) {
+    container.innerHTML = '<div class="no-match">未找到匹配词汇</div>';
+    return;
+  }
+  var html = '';
+  list.forEach(function(w) {
+    var idx = ALL_WORDS.indexOf(w);
+    var status = '';
+    var cls = '';
+    if (mastered.has(idx)) {
+      status = '<span class="status" style="color:var(--correct);font-size:0.85rem">✅</span>';
+      cls = ' mastered';
+    } else if (forgotten.has(idx)) {
+      status = '<span class="status" style="color:#fbbf24;font-size:0.85rem">🔄</span>';
+    } else {
+      status = '<span class="status" style="color:var(--text-secondary);font-size:0.85rem">○</span>';
+    }
+    html += '<div class="word-row' + cls + '">' +
+      status +
+      '<span class="word-front">' + w.front.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</span>' +
+      '<span class="word-back">' + w.back.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</span>' +
+      '</div>';
+  });
+  container.innerHTML = html;
+}
+
+// Event listeners
+document.getElementById('cardWrapper').addEventListener('click', function() {
+  if (animating) return;
+  isFlipped = !isFlipped;
+  card.classList.toggle('flipped', isFlipped);
+});
+
+document.getElementById('btnFlip').addEventListener('click', function(e) {
+  e.stopPropagation();
+  if (animating) return;
+  isFlipped = !isFlipped;
+  card.classList.toggle('flipped', isFlipped);
+});
+
+document.getElementById('btnForgot').addEventListener('click', markForgot);
+document.getElementById('btnRemember').addEventListener('click', markRemembered);
+document.getElementById('btnBack').addEventListener('click', goBack);
+document.getElementById('btnReset').addEventListener('click', resetAll);
+document.getElementById('btnReview').addEventListener('click', reviewForgotten);
+document.getElementById('btnShuffle').addEventListener('click', shuffleAll);
+document.getElementById('btnWordList').addEventListener('click', openWordList);
+document.getElementById('modalClose').addEventListener('click', closeWordList);
+document.getElementById('wordListModal').addEventListener('click', function(e) {
+  if (e.target === this) closeWordList();
+});
+document.getElementById('wordSearch').addEventListener('input', renderWordList);
+
+// Section pills
+document.querySelectorAll('.pill').forEach(function(p) {
+  p.addEventListener('click', function() {
+    switchSection(this.dataset.section);
+  });
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+  if (document.getElementById('wordListModal').classList.contains('open')) {
+    if (e.key === 'Escape') { closeWordList(); e.preventDefault(); }
+    return;
+  }
+  switch (e.key) {
+    case ' ':
+    case 'Enter':
+      e.preventDefault();
+      document.getElementById('btnFlip').click();
+      break;
+    case 'ArrowLeft':
+      e.preventDefault();
+      document.getElementById('btnForgot').click();
+      break;
+    case 'ArrowRight':
+      e.preventDefault();
+      document.getElementById('btnRemember').click();
+      break;
+    case 'ArrowUp':
+      e.preventDefault();
+      document.getElementById('btnBack').click();
+      break;
+    case 'r':
+    case 'R':
+      resetAll();
+      break;
+    case 'f':
+    case 'F':
+      reviewForgotten();
+      break;
+  }
+});
+
+// Initialize
+initQueue('all');
+updateCard();
+updateStats();
+updatePillCounts();
+</script>
+</body>
+</html>
